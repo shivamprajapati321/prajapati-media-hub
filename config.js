@@ -1,17 +1,17 @@
-// Prajapati Media Hub — Production Config
-// Replace values after creating Supabase project.
-
-const CONFIG = {
+window.PMH_CONFIG = {
   COMPANY: "Prajapati Advertising",
   UNIVERSAL_PASSWORD: "9922138138",
 
-  // Existing Apps Script API fallback
   APPS_SCRIPT_API:
     "https://script.google.com/macros/s/AKfycbxdXND_xK9HzCr0JUmnQZ8lVHAhZ96ph-lIKem3fwXl9L9DcOB0t5mwdC_r6boiH_8i/exec",
 
-  // Supabase
-  SUPABASE_URL: "PASTE_SUPABASE_PROJECT_URL_HERE",
-  SUPABASE_ANON_KEY: "PASTE_SUPABASE_ANON_KEY_HERE",
+  SUPABASE_URL: "",
+  SUPABASE_ANON_KEY: "",
 
-  STORAGE_BUCKET: "execution-proofs"
+  STORAGE_BUCKET: "execution-photos",
+
+  PLATE_RECOGNIZER_API_KEY: "",
+
+  WATI_API_ENDPOINT: "",
+  WATI_API_TOKEN: ""
 };

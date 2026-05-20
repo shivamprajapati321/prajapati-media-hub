@@ -1,9 +1,24 @@
 {
   "name": "Prajapati Media Hub",
   "short_name": "MediaHub",
+  "description": "Prajapati Advertising ERP, GPS Proof, OCR, Client Portal",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#050506",
   "theme_color": "#ff6b00",
-  "icons": []
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
