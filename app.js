@@ -1,55 +1,26 @@
-const CONFIG = window.PMH_CONFIG;
-const state = { user:null, active:"setup", data:null, selectedPreview:null, selectedFile:null, gps:null };
+function login(){
+  const p = document.getElementById("pass").value;
 
-function seed(){
-  return {
-    users:[{name:"Shivam Prajapati",phone:"9922138138",role:"admin"},{name:"Ravi Team",phone:"9000000001",role:"execution"},{name:"Client Demo",phone:"9000000002",role:"client"}],
-    orders:[{id:"ORD-99848",client:"Aakash Institute",city:"Pune",media:"Auto Rickshaw Hood",qty:1000,total:647820,status:"Execution"},{id:"ORD-99849",client:"Society Tea",city:"Nagpur",media:"Back Panel",qty:500,total:87910,status:"Completed"}],
-    assignments:[{id:"EX-1001",orderId:"ORD-99848",client:"Aakash Institute",city:"Pune",location:"Hadapsar",team:"Ravi Team",target:250,status:"Running",radius:5}],
-    proofs:[],
-    logs:[]
-  };
-}
-function load(){try{state.data=JSON.parse(localStorage.getItem("pmh_phase5_cloud_pwa"))||seed()}catch(e){state.data=seed()}save()}
-function save(){localStorage.setItem("pmh_phase5_cloud_pwa",JSON.stringify(state.data))}
-function isCloudReady(){return Boolean(CONFIG.SUPABASE_URL&&CONFIG.SUPABASE_ANON_KEY)}
+  if(p === window.PMH_CONFIG.UNIVERSAL_PASSWORD){
 
-async function supabaseRequest(path,method="GET",body=null){
-  if(!isCloudReady())return{ok:false,error:"Supabase config missing"};
-  const res=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${path}`,{method,headers:{apikey:CONFIG.SUPABASE_ANON_KEY,Authorization:`Bearer ${CONFIG.SUPABASE_ANON_KEY}`,"Content-Type":"application/json",Prefer:"return=representation"},body:body?JSON.stringify(body):null});
-  const data=await res.json().catch(()=>null);return{ok:res.ok,data,error:res.ok?null:data};
+    document.getElementById("app").innerHTML = `
+      <div class="dashboard">
+        <h1><span>MEDIA</span> HUB</h1>
+
+        <p>Login Successful</p>
+
+        <div class="cards">
+          <div class="card">Sales</div>
+          <div class="card">Printing</div>
+          <div class="card">Execution</div>
+          <div class="card">Accounts</div>
+          <div class="card">Operations</div>
+          <div class="card">Admin</div>
+        </div>
+      </div>
+    `;
+
+  }else{
+    document.getElementById("msg").innerHTML = "Wrong Password";
+  }
 }
-async function uploadToSupabase(file,path){
-  if(!isCloudReady())return{ok:false,error:"Supabase config missing"};
-  const res=await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/${CONFIG.STORAGE_BUCKET}/${path}`,{method:"POST",headers:{apikey:CONFIG.SUPABASE_ANON_KEY,Authorization:`Bearer ${CONFIG.SUPABASE_ANON_KEY}`,"Content-Type":file.type||"image/jpeg"},body:file});
-  if(!res.ok)return{ok:false,error:await res.text()};
-  return{ok:true,url:`${CONFIG.SUPABASE_URL}/storage/v1/object/public/${CONFIG.STORAGE_BUCKET}/${path}`};
-}
-function renderLogin(){document.getElementById("app").innerHTML=`<div class="login-wrap"><div class="login-box"><div class="logo"><span>MEDIA</span>HUB</div><p>${CONFIG.COMPANY} · Cloud PWA Phase</p><label>Phone / User</label><input id="phone" value="9922138138"><label>Password</label><input id="password" type="password" placeholder="Enter password"><button onclick="login()">Login →</button><div id="err"></div></div></div>`}
-function login(){const pass=document.getElementById("password").value.trim(),phone=document.getElementById("phone").value.trim();if(pass!==CONFIG.UNIVERSAL_PASSWORD){document.getElementById("err").innerText="Wrong password. Use 9922138138";return}load();state.user=state.data.users.find(u=>u.phone===phone)||state.data.users[0];render()}
-function setModule(m){state.active=m;render()}function nav(id,label){return`<button class="${state.active===id?'active':''}" onclick="setModule('${id}')">${label}</button>`}
-function title(){return{setup:"Cloud Setup",dashboard:"Realtime Dashboard",orders:"Orders",execution:"Execution",field:"Field PWA",client:"Client Portal",storage:"Photo Storage",notifications:"Notifications",admin:"Admin"}[state.active]||"Media Hub"}
-function render(){document.getElementById("app").innerHTML=`<div class="app-shell"><aside class="sidebar"><div class="side-logo"><span>MEDIA</span>HUB</div><div class="side-sub">${isCloudReady()?"Cloud Ready":"Demo / Local Mode"}</div><div class="menu">${nav("setup","🧩 Setup")}${nav("dashboard","🏢 Realtime Dashboard")}${nav("orders","📋 Orders")}${nav("execution","⚙️ Execution")}${nav("field","📱 Field PWA")}${nav("client","👤 Client Portal")}${nav("storage","📸 Storage")}${nav("notifications","🔔 Notifications")}${nav("admin","👑 Admin")}</div></aside><main class="main"><div class="topbar"><div><h1>${title()}</h1><p>Cloud backend + PWA + GPS proof + client live portal</p></div><div class="actions"><button class="btn secondary" onclick="installHint()">Install App</button><button class="btn" onclick="syncCloud()">Sync Cloud</button></div></div>${module()}</main></div>`}
-function module(){return({setup,dashboard,orders,execution,field,client,storage,notifications,admin}[state.active]||setup)()}
-function money(n){return"₹"+(Number(n)||0).toLocaleString("en-IN")}function kpi(l,v){return`<div class="card"><h3>${l}</h3><h1>${v}</h1></div>`}function badge(t,c="orangeb"){return`<span class="badge ${c}">${t}</span>`}
-function setup(){const checks=[["Supabase URL",CONFIG.SUPABASE_URL?"Done":"Pending"],["Supabase anon key",CONFIG.SUPABASE_ANON_KEY?"Done":"Pending"],["Storage bucket",CONFIG.STORAGE_BUCKET?"Ready":"Pending"],["PWA manifest","Ready"],["Service worker","Ready"],["GPS support",navigator.geolocation?"Ready":"Not supported"],["Plate OCR API",CONFIG.PLATE_RECOGNIZER_API_KEY?"Ready":"Pending"],["WATI API",CONFIG.WATI_API_TOKEN?"Ready":"Pending"]];return`<div class="cards">${kpi("Mode",isCloudReady()?"Cloud":"Local")}${kpi("PWA","Ready")}${kpi("Storage",CONFIG.STORAGE_BUCKET)}${kpi("Role",state.user.role)}</div><div class="card"><h2 class="section-title">Setup Checklist</h2><div class="checklist">${checks.map(([a,b])=>`<div class="check"><b>${a}</b>${badge(b,b==="Done"||b==="Ready"?"greenb":"redb")}</div>`).join("")}</div></div>`}
-function dashboard(){const total=state.data.orders.reduce((s,o)=>s+Number(o.total||0),0),target=state.data.assignments.reduce((s,a)=>s+Number(a.target||0),0),done=state.data.proofs.length;return`<div class="cards">${kpi("Revenue",money(total))}${kpi("Orders",state.data.orders.length)}${kpi("Execution",`${done}/${target}`)}${kpi("Proofs",state.data.proofs.length)}${kpi("Users",state.data.users.length)}${kpi("Cloud",isCloudReady()?"Connected":"Pending")}</div><div class="map"><span class="dot d1"></span><span class="dot d2"></span></div>${ordersTable()}`}
-function orders(){return`<div class="cards">${kpi("Orders",state.data.orders.length)}${kpi("In Execution",state.data.orders.filter(o=>o.status==="Execution").length)}${kpi("Completed",state.data.orders.filter(o=>o.status==="Completed").length)}</div>${ordersTable()}`}
-function ordersTable(){return`<div class="table"><table><thead><tr><th>Order</th><th>Client</th><th>City</th><th>Media</th><th>Qty</th><th>Total</th><th>Status</th></tr></thead><tbody>${state.data.orders.map(o=>`<tr><td>${o.id}</td><td>${o.client}</td><td>${o.city}</td><td>${o.media}</td><td>${o.qty}</td><td>${money(o.total)}</td><td>${badge(o.status,o.status==="Completed"?"greenb":"orangeb")}</td></tr>`).join("")}</tbody></table></div>`}
-function execution(){return`<div class="cards">${kpi("Assignments",state.data.assignments.length)}${kpi("Proofs",state.data.proofs.length)}${kpi("Duplicates",state.data.proofs.filter(p=>p.duplicate).length)}</div><div class="table"><table><thead><tr><th>ID</th><th>Order</th><th>Client</th><th>Location</th><th>Team</th><th>Target</th><th>Done</th><th>Status</th></tr></thead><tbody>${state.data.assignments.map(a=>{const done=state.data.proofs.filter(p=>p.assignmentId===a.id).length;return`<tr><td>${a.id}</td><td>${a.orderId}</td><td>${a.client}</td><td>${a.city} · ${a.location}</td><td>${a.team}</td><td>${a.target}</td><td>${done}</td><td>${badge(done>=a.target?"Completed":"Running",done>=a.target?"greenb":"orangeb")}</td></tr>`}).join("")}</tbody></table></div>`}
-function field(){const opts=state.data.assignments.map(a=>`<option value="${a.id}">${a.id} · ${a.client} · ${a.location}</option>`).join("");return`<div class="card"><h2 class="section-title">Field GPS + Photo Upload</h2><div class="form-grid"><div><label class="label">Assignment</label><select id="assignmentId">${opts}</select></div><div><label class="label">Vehicle No / OCR</label><input class="input" id="vehicleNo" value="MH12AB1234"></div><div><label class="label">Driver Name</label><input class="input" id="driverName"></div><div><label class="label">Mobile</label><input class="input" id="mobile"></div><div class="full"><label class="label">GPS</label><input class="input" id="gps" value="Click Get GPS"></div></div><div class="actions"><button class="btn blue" onclick="getGPS()">Get GPS</button><button class="btn secondary" onclick="simulateOCR()">Simulate OCR</button></div><br><label class="label">Photo Proof</label><input class="input" type="file" accept="image/*" capture="environment" onchange="handlePhoto(event)"><div id="preview" class="preview">${state.selectedPreview?`<img src="${state.selectedPreview}">`:"📸 Photo preview"}</div><br><button class="btn" onclick="saveProof()">Save Proof</button></div>`}
-function getGPS(){if(!navigator.geolocation){alert("GPS not supported");return}navigator.geolocation.getCurrentPosition(pos=>{state.gps={lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy};document.getElementById("gps").value=`${state.gps.lat.toFixed(6)}, ${state.gps.lng.toFixed(6)} · ±${Math.round(state.gps.accuracy)}m`},()=>alert("GPS permission denied"))}
-function simulateOCR(){const samples=["MH12AB1234","MH14HM8257","MH20EE4421","MH31CQ9087"];document.getElementById("vehicleNo").value=samples[Math.floor(Math.random()*samples.length)]}
-function handlePhoto(e){const file=e.target.files[0];if(!file)return;state.selectedFile=file;const reader=new FileReader();reader.onload=()=>{state.selectedPreview=reader.result;document.getElementById("preview").innerHTML=`<img src="${reader.result}">`};reader.readAsDataURL(file)}
-async function saveProof(){const assignmentId=document.getElementById("assignmentId").value,vehicleNo=document.getElementById("vehicleNo").value.toUpperCase().replace(/\\s/g,"");const duplicate=state.data.proofs.some(p=>p.vehicleNo===vehicleNo);let imageUrl=state.selectedPreview||"";if(isCloudReady()&&state.selectedFile){const path=`${assignmentId}/${Date.now()}-${vehicleNo}.jpg`;const up=await uploadToSupabase(state.selectedFile,path);if(up.ok)imageUrl=up.url}const proof={id:"PF-"+Date.now(),assignmentId,vehicleNo,driverName:document.getElementById("driverName").value,mobile:document.getElementById("mobile").value,gps:state.gps||{lat:18.5204,lng:73.8567,accuracy:20},image_url:imageUrl,time:new Date().toLocaleString("en-IN"),duplicate,verified:!duplicate};state.data.proofs.unshift(proof);state.selectedPreview=null;save();if(isCloudReady()){await supabaseRequest("execution_proofs","POST",{order_id:assignmentId,vehicle_no:vehicleNo,latitude:proof.gps.lat,longitude:proof.gps.lng,image_url:imageUrl,team_name:state.user.name})}alert(duplicate?"Duplicate warning saved":"Proof saved");setModule("client")}
-function client(){const target=state.data.assignments.reduce((s,a)=>s+Number(a.target||0),0),done=state.data.proofs.filter(p=>p.verified).length;return`<div class="cards">${kpi("Target",target)}${kpi("Completed",done)}${kpi("Pending",target-done)}${kpi("Photos",state.data.proofs.length)}</div><div class="map"><span class="dot d1"></span><span class="dot d2"></span></div>${proofGallery()}<br><button class="btn" onclick="downloadCSV()">Download CSV Report</button>`}
-function storage(){return`<div class="cards">${kpi("Bucket",CONFIG.STORAGE_BUCKET)}${kpi("Photos",state.data.proofs.length)}${kpi("Cloud",isCloudReady()?"Ready":"Pending")}</div>${proofGallery()}`}
-function proofGallery(){return`<div class="photo-grid">${state.data.proofs.map(p=>`<div class="photo-card">${p.image_url?`<img src="${p.image_url}">`:`<div class="preview" style="height:130px">No Image</div>`}<div><b>${p.vehicleNo}</b><br>${p.time}<br>${p.gps.lat.toFixed(4)}, ${p.gps.lng.toFixed(4)}<br>${p.duplicate?badge("Duplicate","redb"):badge("Verified","greenb")}</div></div>`).join("")}</div>`}
-function notifications(){return`<div class="cards">${kpi("Push","Ready")}${kpi("WATI",CONFIG.WATI_API_TOKEN?"Ready":"Pending")}${kpi("Logs",state.data.logs.length)}</div><div class="card"><h2 class="section-title">Notification Templates</h2><p class="small">Campaign started · Proof uploaded · Report ready · Payment reminder · Campaign completed</p><br><button class="btn" onclick="logNotification()">Log Test Notification</button></div>`}
-function logNotification(){state.data.logs.unshift({time:new Date().toLocaleString("en-IN"),msg:"Test notification logged"});save();render()}
-function admin(){return`<div class="cards">${kpi("Users",state.data.users.length)}${kpi("Orders",state.data.orders.length)}${kpi("Proofs",state.data.proofs.length)}${kpi("Mode",isCloudReady()?"Cloud":"Local")}</div><div class="card"><h2 class="section-title">Backend Status</h2><p class="small">1. Supabase URL + anon key config.js mein paste karo.<br>2. Storage bucket execution-photos create karo.<br>3. SQL tables create karo.<br>4. Field app se photo upload test karo.<br>5. Client portal mein proof verify karo.</p><br><button class="btn red" onclick="resetData()">Reset Local Data</button></div>`}
-function resetData(){if(confirm("Reset local data?")){state.data=seed();save();render()}}
-async function syncCloud(){if(!isCloudReady()){alert("Supabase config missing. App is running in local mode.");return}for(const o of state.data.orders){await supabaseRequest("orders","POST",{order_id:o.id,client_name:o.client,city:o.city,media_type:o.media,qty:o.qty,rate:o.rate||0,total:o.total,status:o.status})}alert("Cloud sync attempt completed")}
-function installHint(){alert("Mobile par Chrome menu → Add to Home Screen. Desktop par address bar install icon check karo.")}
-function downloadCSV(){const rows=[["Proof ID","Assignment","Vehicle No","Time","Lat","Lng","Duplicate","Verified"],...state.data.proofs.map(p=>[p.id,p.assignmentId,p.vehicleNo,p.time,p.gps.lat,p.gps.lng,p.duplicate,p.verified])];const csv=rows.map(r=>r.map(x=>`"${String(x).replaceAll('"','""')}"`).join(",")).join("\\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="execution-report.csv";a.click()}
-renderLogin();
