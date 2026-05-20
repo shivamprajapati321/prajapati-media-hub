@@ -20,7 +20,8 @@ const state = {
   selectedOrder:null,
   file:null,
   preview:null,
-  gps:null
+  gps:null,
+  selectedCities:[]
 };
 
 function seed(){
@@ -29,16 +30,18 @@ function seed(){
       {
         id:"ORD-63974", company:"Renkeshire", person:"Mr. Rakesh", contact:"9000000001",
         source:"Manual", media:"Auto Rickshaw Hood Branding", location:"Pune - Hadapsar",
-        qty:100, designs:"1 design", gst:"GST", account:"HDFC", amount:48000, advance:20000,
-        balance:28000, receipt:"Pending", start:"2026-05-20", end:"2026-05-25",
+        cities:["Pune"], qty:100, rate:480, designs:"1 design", gstType:"GST", gstNumber:"", gst:8640,
+        account:"HDFC", amount:48000, finalAmount:56640, advance:20000,
+        balance:36640, receipt:"Pending", designUpload:"Pending", receiptUpload:"Pending", start:"2026-05-20", end:"2026-05-25",
         status:"Dispatch Ready", sales:"Shivam Prajapati", stage:7, approved:true,
         notes:"Urgent work. Client needs report after execution."
       },
       {
         id:"ORD-68151", company:"Apar", person:"Purchase Manager", contact:"9000000002",
         source:"IndiaMART", media:"Auto Rickshaw Hood Branding", location:"Mumbai, Pune, Nashik",
-        qty:11450, designs:"Multiple city designs", gst:"GST", account:"ICICI", amount:4866250,
-        advance:3000000, balance:1866250, receipt:"Uploaded", start:"2026-05-21", end:"2026-04-30",
+        cities:["Mumbai","Pune","Nashik"], qty:11450, rate:425, designs:"Multiple city designs", gstType:"GST", gstNumber:"", gst:875925,
+        account:"ICICI", amount:4866250, finalAmount:5742175,
+        advance:3000000, balance:2742175, receipt:"Uploaded", designUpload:"Uploaded", receiptUpload:"Uploaded", start:"2026-05-21", end:"2026-04-30",
         status:"New", sales:"Shivam Prajapati", stage:1, approved:true,
         notes:"Multi city campaign. Admin verified."
       }
@@ -91,11 +94,11 @@ function seed(){
 }
 
 function load(){
-  try{ state.data = JSON.parse(localStorage.getItem("pmh_admin_order_engine_final")) || seed(); }
+  try{ state.data = JSON.parse(localStorage.getItem("pmh_admin_order_engine_upgraded_final")) || seed(); }
   catch(e){ state.data = seed(); }
   save();
 }
-function save(){ localStorage.setItem("pmh_admin_order_engine_final", JSON.stringify(state.data)); }
+function save(){ localStorage.setItem("pmh_admin_order_engine_upgraded_final", JSON.stringify(state.data)); }
 
 function login(){
   const p = document.getElementById("pass").value;
@@ -200,9 +203,9 @@ function money(n){ return "₹" + Number(n||0).toLocaleString("en-IN"); }
 function kpi(l,v,c=""){ return `<div class="card ${c}"><h3>${l}</h3><h1>${v}</h1></div>`; }
 function badge(t){
   let c = t==="Approved"||t==="Done"||t==="Completed"||t==="Sample Approved"||t==="Active" ? "b-green" :
-          t==="Pending"||t.includes("Pending") ? "b-red" :
+          t==="Pending"||String(t).includes("Pending") ? "b-red" :
           t==="Running"||t==="Execution"||t==="In Production" ? "b-orange" :
-          t.includes("Ready")||t==="Assigned" ? "b-blue" : "b-pink";
+          String(t).includes("Ready")||t==="Assigned" ? "b-blue" : "b-pink";
   return `<span class="badge ${c}">${t}</span>`;
 }
 function table(h,r){
@@ -215,7 +218,7 @@ function val(id){ return document.getElementById(id)?.value || ""; }
 
 function dashboard(){
   let d=state.data;
-  let total=d.orders.reduce((s,o)=>s+Number(o.amount||0),0);
+  let total=d.orders.reduce((s,o)=>s+Number(o.finalAmount || o.amount || 0),0);
   let advance=d.orders.reduce((s,o)=>s+Number(o.advance||0),0);
   let balance=d.orders.reduce((s,o)=>s+Number(o.balance||0),0);
   let expenses=d.expenses.reduce((s,e)=>s+Number(e.amount||0),0);
@@ -249,6 +252,9 @@ function dashboard(){
 }
 
 function orderCreate(){
+  state.selectedCities = [];
+  setTimeout(()=>{ toggleGST(); calculateTotal(); }, 0);
+
   return `
     <div class="card">
       <h2>Real Order Create</h2><br>
@@ -258,33 +264,130 @@ function orderCreate(){
         ${input("contact","Contact Number")}
         ${select("source","Lead Source",["Manual","Meta","IndiaMART","JustDial","TradeIndia","Referral"])}
         ${select("media","Media",["Auto Rickshaw Hood Branding","Auto Rickshaw Back Panel","No Parking Board","Vinyls Printing","Flex Printing","Digital Wall Wrap"])}
-        ${input("location","Location / Multiple Cities")}
+
+        <div>
+          <label class="label">Multiple Location / City</label>
+          <input class="input" id="cityInput" placeholder="Search / enter city and click Add">
+          <button class="btn small" onclick="addCity()" type="button">+ Add City</button>
+          <div id="cityTags" class="tag-wrap"></div>
+        </div>
+
         ${input("qty","Quantity","","number")}
-        ${input("designs","Design Details / Multiple Designs")}
-        ${input("amount","Total Amount","","number")}
+        ${input("rate","Rate Per PCS","","number")}
+
+        <div>
+          <label class="label">GST / Non GST</label>
+          <select id="gstType" onchange="toggleGST();calculateTotal();">
+            <option>GST</option>
+            <option>Non GST</option>
+          </select>
+        </div>
+
+        <div id="gstBox">
+          ${input("gstNumber","GST Number")}
+        </div>
+
         ${input("advance","Part Payment Received","0","number")}
-        ${select("gst","GST / Non GST",["GST","Non GST"])}
-        ${select("account","Payment Account",["HDFC","ICICI","UPI","Cash","Other"])}
-        ${select("receipt","Receipt Upload Status",["Pending","Uploaded"])}
+        ${select("account","Payment Account",["HDFC","ICICI","Cash","UPI","Other"])}
+
+        <div>
+          <label class="label">Design Upload Final</label>
+          <input class="input" type="file" id="designUpload" multiple>
+          <div class="upload-note">Upload final design / multiple city designs</div>
+        </div>
+
+        <div>
+          <label class="label">Receipt Upload</label>
+          <input class="input" type="file" id="receiptUpload">
+          <div class="upload-note">Upload payment receipt screenshot / PDF</div>
+        </div>
+
         ${input("start","Work Start Date","","date")}
         ${input("end","Work End Date","","date")}
-        <div class="full">${area("notes","Full Clarity / Notes")}</div>
+
+        <div class="full">
+          ${area("notes","Full Clarity / Notes")}
+        </div>
       </div>
+
+      <div class="cards" style="margin-top:20px">
+        <div class="card orange">
+          <h3>Base Amount</h3>
+          <h1 id="baseAmount">₹0</h1>
+        </div>
+        <div class="card blue">
+          <h3>GST 18%</h3>
+          <h1 id="gstAmount">₹0</h1>
+        </div>
+        <div class="card green">
+          <h3>Final Total</h3>
+          <h1 id="finalAmount">₹0</h1>
+        </div>
+      </div>
+
       <button class="btn" onclick="createOrder()">Create Order & Send To Admin Approval</button>
     </div>
   `;
 }
-function input(id,l,v="",t="text"){ return `<div><label class="label">${l}</label><input class="input" id="${id}" type="${t}" value="${v}" placeholder="${l}"></div>`; }
+function input(id,l,v="",t="text"){ return `<div><label class="label">${l}</label><input class="input" id="${id}" type="${t}" value="${v}" placeholder="${l}" oninput="calculateTotal()"></div>`; }
 function select(id,l,arr){ return `<div><label class="label">${l}</label><select id="${id}">${arr.map(x=>`<option>${x}</option>`).join("")}</select></div>`; }
 function area(id,l){ return `<label class="label">${l}</label><textarea id="${id}" rows="3" placeholder="${l}"></textarea>`; }
 
+function addCity(){
+  const input = document.getElementById("cityInput");
+  const city = input.value.trim();
+  if(!city) return;
+  if(!state.selectedCities.includes(city)) state.selectedCities.push(city);
+  input.value = "";
+  renderCities();
+}
+function renderCities(){
+  const box = document.getElementById("cityTags");
+  if(!box) return;
+  box.innerHTML = state.selectedCities.map((city,index)=>`
+    <div class="city-tag" onclick="removeCity(${index})">${city} ✕</div>
+  `).join("");
+}
+function removeCity(index){
+  state.selectedCities.splice(index,1);
+  renderCities();
+}
+function toggleGST(){
+  const type = document.getElementById("gstType")?.value;
+  const box = document.getElementById("gstBox");
+  if(box) box.style.display = type === "GST" ? "block" : "none";
+}
+function calculateTotal(){
+  const qty = Number(document.getElementById("qty")?.value || 0);
+  const rate = Number(document.getElementById("rate")?.value || 0);
+  const gstType = document.getElementById("gstType")?.value || "GST";
+  const base = qty * rate;
+  const gst = gstType === "GST" ? Math.round(base * 0.18) : 0;
+  const final = base + gst;
+  const baseEl = document.getElementById("baseAmount");
+  const gstEl = document.getElementById("gstAmount");
+  const finalEl = document.getElementById("finalAmount");
+  if(baseEl) baseEl.innerText = money(base);
+  if(gstEl) gstEl.innerText = money(gst);
+  if(finalEl) finalEl.innerText = money(final);
+}
+
 function createOrder(){
-  if(!val("company") || !val("qty") || !val("amount")){
-    alert("Company, Quantity and Amount required");
+  const qty = Number(val("qty"));
+  const rate = Number(val("rate"));
+  if(!val("company") || !qty || !rate){
+    alert("Company, Quantity and Rate required");
     return;
   }
-  const amount = Number(val("amount"));
+
+  const base = qty * rate;
+  const gstType = val("gstType");
+  const gst = gstType === "GST" ? Math.round(base * 0.18) : 0;
+  const finalAmount = base + gst;
   const advance = Number(val("advance"));
+  const designFile = document.getElementById("designUpload")?.files?.length || 0;
+  const receiptFile = document.getElementById("receiptUpload")?.files?.length || 0;
+
   const o = {
     id:"ORD-"+Math.floor(10000+Math.random()*89999),
     company:val("company"),
@@ -292,15 +395,22 @@ function createOrder(){
     contact:val("contact"),
     source:val("source"),
     media:val("media"),
-    location:val("location"),
-    qty:Number(val("qty")),
-    designs:val("designs"),
-    gst:val("gst"),
+    cities:[...state.selectedCities],
+    location:state.selectedCities.join(", "),
+    qty,
+    rate,
+    designs:val("notes"),
+    gstType,
+    gstNumber:val("gstNumber"),
+    gst,
     account:val("account"),
-    amount,
+    amount:base,
+    finalAmount,
     advance,
-    balance:amount-advance,
-    receipt:val("receipt"),
+    balance:finalAmount-advance,
+    receipt:receiptFile ? "Uploaded" : "Pending",
+    designUpload:designFile ? "Uploaded" : "Pending",
+    receiptUpload:receiptFile ? "Uploaded" : "Pending",
     start:val("start"),
     end:val("end"),
     status:"Admin Approval Pending",
@@ -309,25 +419,37 @@ function createOrder(){
     approved:false,
     notes:val("notes")
   };
+
   state.data.orders.unshift(o);
-  state.data.design.unshift({id:"DS-"+Date.now(),order:o.id,designer:"Unassigned",required:o.designs?"Yes":"No",status:"Pending Admin Review",notes:o.designs});
+  state.data.design.unshift({
+    id:"DS-"+Date.now(),
+    order:o.id,
+    designer:"Unassigned",
+    required:designFile ? "Uploaded" : "Required",
+    status:"Pending Admin Review",
+    notes:`Cities: ${o.location || "-"} | Design: ${o.designUpload}`
+  });
+
   save();
   state.selectedOrder=o.id;
+  alert("Order Created Successfully");
   go("approvals");
 }
 
 function orders(){
   return section("Work Orders","Work progress, payment, GST, location, media",
-    table(["Order","Client","Media","Location","Qty","Payment","GST/Account","Status","Actions"],
+    table(["Order","Client","Media","Cities","Qty","Rate","Payment","GST","Uploads","Status","Actions"],
       state.data.orders.map(o=>`
         <tr>
           <td><b style="color:var(--blue)">${o.id}</b><br><small>${o.source||"Manual"}</small></td>
           <td>${o.company}<br><small>${o.person} · ${o.contact}</small></td>
           <td>${o.media}</td>
-          <td>${o.location}</td>
+          <td>${(o.cities||[]).join(", ") || o.location || "-"}</td>
           <td>${o.qty}</td>
-          <td>${money(o.advance)} / ${money(o.amount)}<br><small>Bal: ${money(o.balance)}</small></td>
-          <td>${o.gst}<br>${o.account}<br>${o.receipt}</td>
+          <td>${money(o.rate||0)}</td>
+          <td>${money(o.advance)} / ${money(o.finalAmount || o.amount)}<br><small>Bal: ${money(o.balance)}</small></td>
+          <td>${o.gstType || "GST"}<br>${o.gstNumber || "-"}<br>GST: ${money(o.gst||0)}</td>
+          <td>Design: ${o.designUpload||"Pending"}<br>Receipt: ${o.receiptUpload||o.receipt||"Pending"}</td>
           <td>${badge(o.status)}</td>
           <td class="actions">
             <button class="btn small dark" onclick="showFlow('${o.id}')">Flow</button>
@@ -362,9 +484,9 @@ function approvals(){
   return section("Admin Approval Queue","Admin verifies order, design, expense, invoice",
     table(["Type","Reference","Details","Status","Action"],
       [
-        ...state.data.orders.filter(o=>!o.approved).map(o=>`<tr><td>Work Order</td><td>${o.id}</td><td>${o.company} · ${o.media} · ${o.qty}</td><td>${badge(o.status)}</td><td><button class="btn small" onclick="approveOrder('${o.id}')">Approve</button></td></tr>`),
-        ...state.data.design.filter(d=>d.status.includes("Pending")).map(d=>`<tr><td>Design</td><td>${d.order}</td><td>${d.notes||"-"}</td><td>${badge(d.status)}</td><td><button class="btn small" onclick="approveDesign('${d.id}')">Approve Design</button></td></tr>`),
-        ...state.data.expenses.filter(e=>e.status.includes("Pending")).map(e=>`<tr><td>Expense</td><td>${e.order}</td><td>${e.head} · ${money(e.amount)}</td><td>${badge(e.status)}</td><td><button class="btn small" onclick="approveExpense('${e.id}')">Approve Expense</button></td></tr>`)
+        ...state.data.orders.filter(o=>!o.approved).map(o=>`<tr><td>Work Order</td><td>${o.id}</td><td>${o.company} · ${o.media} · ${o.qty} pcs · ${money(o.finalAmount||o.amount)}</td><td>${badge(o.status)}</td><td><button class="btn small" onclick="approveOrder('${o.id}')">Approve</button></td></tr>`),
+        ...state.data.design.filter(d=>String(d.status).includes("Pending")).map(d=>`<tr><td>Design</td><td>${d.order}</td><td>${d.notes||"-"}</td><td>${badge(d.status)}</td><td><button class="btn small" onclick="approveDesign('${d.id}')">Approve Design</button></td></tr>`),
+        ...state.data.expenses.filter(e=>String(e.status).includes("Pending")).map(e=>`<tr><td>Expense</td><td>${e.order}</td><td>${e.head} · ${money(e.amount)}</td><td>${badge(e.status)}</td><td><button class="btn small" onclick="approveExpense('${e.id}')">Approve Expense</button></td></tr>`)
       ]
     )
   );
@@ -389,9 +511,9 @@ function design(){
 function operations(){
   return `<div class="cards">
     ${kpi("Approved Orders",state.data.orders.filter(o=>o.approved).length,"green")}
-    ${kpi("Design Pending",state.data.design.filter(d=>d.status.includes("Pending")).length,"red")}
+    ${kpi("Design Pending",state.data.design.filter(d=>String(d.status).includes("Pending")).length,"red")}
     ${kpi("Printing Jobs",state.data.printing.length,"blue")}
-    ${kpi("Dispatch Pending",state.data.dispatch.filter(d=>d.status.includes("Pending")).length,"orange")}
+    ${kpi("Dispatch Pending",state.data.dispatch.filter(d=>String(d.status).includes("Pending")).length,"orange")}
   </div>${orders()}`;
 }
 function printing(){
@@ -473,7 +595,7 @@ function accounts(){
   );
 }
 function addExpense(){state.data.expenses.unshift({id:"EXP-"+Date.now(),order:val("expOrder").split(" - ")[0],head:val("head"),amount:Number(val("amount")),by:"Accountant",status:"Pending Approval"});save();render();}
-function makeInvoice(id){const o=state.data.orders.find(x=>x.id===id);state.data.invoices.unshift({id:"INV-"+Date.now(),order:o.id,client:o.company,total:o.amount,status:"Generated"});o.stage=Math.max(o.stage,10);o.status="Invoice Generated";save();render();}
+function makeInvoice(id){const o=state.data.orders.find(x=>x.id===id);state.data.invoices.unshift({id:"INV-"+Date.now(),order:o.id,client:o.company,total:o.finalAmount||o.amount,status:"Generated"});o.stage=Math.max(o.stage,10);o.status="Invoice Generated";save();render();}
 function client(){
   return section("Client Live Portal","Live photos, OCR, GPS, PDF/CSV download",
     `<div class="photo-grid">${state.data.proofs.map(p=>`<div class="photo">${p.img?`<img src="${p.img}">`:""}<div><b>${p.vehicle}</b><br>${p.photoType}<br>${p.time}<br>${p.verified?badge("Verified"):badge("Duplicate")}</div></div>`).join("")}</div>`
@@ -505,7 +627,7 @@ function ink(){
   return section("Ink Stock","CMYK live levels",`<div class="ink-grid">${cards}</div>`);
 }
 function csv(name,rows){const data=rows.map(r=>r.map(x=>`"${String(x??"").replaceAll('"','""')}"`).join(",")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data]));a.download=name;a.click();}
-function downloadOrders(){csv("orders.csv",[["Order","Company","Media","Qty","Amount","Advance","Balance","Status"],...state.data.orders.map(o=>[o.id,o.company,o.media,o.qty,o.amount,o.advance,o.balance,o.status])]);}
+function downloadOrders(){csv("orders.csv",[["Order","Company","Media","Cities","Qty","Rate","Base","GST","Final","Advance","Balance","Status"],...state.data.orders.map(o=>[o.id,o.company,o.media,(o.cities||[]).join("|"),o.qty,o.rate,o.amount,o.gst,o.finalAmount,o.advance,o.balance,o.status])]);}
 function downloadExecution(){csv("execution.csv",[["Vehicle","Photo Type","GPS","Time","Verified"],...state.data.proofs.map(p=>[p.vehicle,p.photoType,`${p.gps.lat},${p.gps.lng}`,p.time,p.verified])]);}
 function downloadDispatch(){csv("dispatch.csv",[["ID","Order","To","Type","Bundles","Per","Total","Vendor","Status"],...state.data.dispatch.map(d=>[d.id,d.order,d.to,d.type,d.bundles,d.per,d.total,d.vendor,d.status])]);}
 function backup(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(state.data,null,2)]));a.download="mediahub-backup.json";a.click();}
