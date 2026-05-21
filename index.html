@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MediaHub Phase 20 Executive Dashboard</title>
+<title>MediaHub Phase 21 Sales CRM</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:18px}
@@ -14,11 +14,12 @@ body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .stat h1{margin:0;color:#ff6b00}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
-.badge{padding:5px 10px;border-radius:999px;background:#22c55e20;color:#22c55e;font-size:11px;font-weight:700}
+input,select,textarea{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
+button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;color:#111;cursor:pointer}
+.badge{padding:5px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#22c55e20;color:#22c55e}
 .orange{background:#ff6b0020;color:#ff6b00}
 .red{background:#ef444420;color:#ef4444}
-input,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
-button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;color:#111;cursor:pointer}
+.blue{background:#38bdf820;color:#38bdf8}
 .progress{height:10px;background:#242424;border-radius:999px;overflow:hidden}
 .bar{height:100%;background:#ff6b00}
 </style>
@@ -28,51 +29,68 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 20 - Executive Analytics Dashboard</h1>
-<p>Owner / CEO level analytics + business intelligence overview</p>
+<h1>Phase 21 - Sales CRM + Lead Funnel</h1>
+<p>Lead capture + follow-up + quotation + conversion analytics</p>
 </div>
 
 <div class="grid" id="stats"></div>
 
 <div class="card">
-<h2>Add Performance Entry</h2>
+<h2>Add Lead</h2>
 
 <table>
 <tr>
-<td><input id="city" placeholder="City"></td>
-<td><input id="team" placeholder="Team"></td>
-<td><input id="revenue" type="number" placeholder="Revenue"></td>
-<td><input id="expense" type="number" placeholder="Expense"></td>
+<td><input id="company" placeholder="Company Name"></td>
+<td><input id="person" placeholder="Person Name"></td>
+<td><input id="phone" placeholder="Phone"></td>
+<td>
+<select id="source">
+<option>Meta Ads</option>
+<option>IndiaMART</option>
+<option>JustDial</option>
+<option>TradeIndia</option>
+<option>Manual</option>
+</select>
+</td>
 </tr>
 
 <tr>
-<td><input id="orders" type="number" placeholder="Orders"></td>
-<td><input id="completed" type="number" placeholder="Completed"></td>
 <td>
-<select id="status">
-<option>Growing</option>
-<option>Stable</option>
-<option>Critical</option>
+<select id="service">
+<option>Auto Rickshaw Hood Branding</option>
+<option>Back Panel</option>
+<option>Flex Printing</option>
+<option>Wall Wrap</option>
+<option>No Parking Board</option>
 </select>
 </td>
-<td><button onclick="saveEntry()">Save Analytics</button></td>
+
+<td>
+<select id="stage">
+<option>New Lead</option>
+<option>Follow Up</option>
+<option>Quotation Sent</option>
+<option>Negotiation</option>
+<option>Won</option>
+<option>Lost</option>
+</select>
+</td>
+
+<td><input id="amount" type="number" placeholder="Quotation Amount"></td>
+
+<td><button onclick="saveLead()">Save Lead</button></td>
 </tr>
 </table>
 
 </div>
 
 <div class="card">
-<h2>City Performance</h2>
-<table id="cityTable"></table>
+<h2>Lead Funnel</h2>
+<table id="leadTable"></table>
 </div>
 
 <div class="card">
-<h2>Team Productivity</h2>
-<table id="teamTable"></table>
-</div>
-
-<div class="card">
-<h2>Business Health Summary</h2>
+<h2>Sales Performance</h2>
 <div id="summary"></div>
 </div>
 
@@ -80,126 +98,125 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 
 <script>
 
-let analytics = JSON.parse(localStorage.getItem("mh20_analytics") || "[]");
+let leads = JSON.parse(localStorage.getItem("mh21_leads") || "[]");
 
 function save(){
-localStorage.setItem("mh20_analytics", JSON.stringify(analytics));
+localStorage.setItem("mh21_leads", JSON.stringify(leads));
 }
 
 function money(x){
 return "₹" + Number(x || 0).toLocaleString("en-IN");
 }
 
-function saveEntry(){
+function badge(stage){
+
+let cls = "";
+
+if(stage === "Won"){
+cls = "";
+}
+else if(stage === "Negotiation"){
+cls = "orange";
+}
+else if(stage === "Lost"){
+cls = "red";
+}
+else{
+cls = "blue";
+}
+
+return `<span class="badge ${cls}">${stage}</span>`;
+
+}
+
+function saveLead(){
 
 let item = {
-id:"AN-"+Date.now(),
-city:document.getElementById("city").value,
-team:document.getElementById("team").value,
-revenue:Number(document.getElementById("revenue").value || 0),
-expense:Number(document.getElementById("expense").value || 0),
-orders:Number(document.getElementById("orders").value || 0),
-completed:Number(document.getElementById("completed").value || 0),
-status:document.getElementById("status").value
+id:"LD-"+Date.now(),
+company:document.getElementById("company").value,
+person:document.getElementById("person").value,
+phone:document.getElementById("phone").value,
+source:document.getElementById("source").value,
+service:document.getElementById("service").value,
+stage:document.getElementById("stage").value,
+amount:Number(document.getElementById("amount").value || 0),
+created:new Date().toLocaleString("en-IN")
 };
 
-analytics.unshift(item);
+leads.unshift(item);
 
 save();
 
 render();
 
-alert("Analytics Entry Saved");
+alert("Lead Saved");
 
 }
 
 function render(){
 
-let totalRevenue = analytics.reduce((a,x)=>a+x.revenue,0);
-let totalExpense = analytics.reduce((a,x)=>a+x.expense,0);
-let totalOrders = analytics.reduce((a,x)=>a+x.orders,0);
-let completed = analytics.reduce((a,x)=>a+x.completed,0);
+let total = leads.length;
+let won = leads.filter(x=>x.stage==="Won").length;
+let lost = leads.filter(x=>x.stage==="Lost").length;
+let follow = leads.filter(x=>x.stage==="Follow Up").length;
 
-let profit = totalRevenue-totalExpense;
-let completion = totalOrders ? Math.round((completed/totalOrders)*100) : 0;
+let revenue = leads.filter(x=>x.stage==="Won").reduce((a,x)=>a+x.amount,0);
+
+let conversion = total ? Math.round((won/total)*100) : 0;
 
 document.getElementById("stats").innerHTML = `
-<div class="stat"><h3>Total Revenue</h3><h1>${money(totalRevenue)}</h1></div>
-<div class="stat"><h3>Total Expense</h3><h1>${money(totalExpense)}</h1></div>
-<div class="stat"><h3>Profit</h3><h1>${money(profit)}</h1></div>
-<div class="stat"><h3>Total Orders</h3><h1>${totalOrders}</h1></div>
-<div class="stat"><h3>Completed</h3><h1>${completed}</h1></div>
-<div class="stat"><h3>Completion %</h3><h1>${completion}%</h1></div>
+<div class="stat"><h3>Total Leads</h3><h1>${total}</h1></div>
+<div class="stat"><h3>Won Deals</h3><h1>${won}</h1></div>
+<div class="stat"><h3>Follow Ups</h3><h1>${follow}</h1></div>
+<div class="stat"><h3>Lost Leads</h3><h1>${lost}</h1></div>
+<div class="stat"><h3>Sales Revenue</h3><h1>${money(revenue)}</h1></div>
+<div class="stat"><h3>Conversion %</h3><h1>${conversion}%</h1></div>
 `;
 
-let cityHtml = `
+let html = `
 <tr>
-<th>City</th>
-<th>Revenue</th>
-<th>Expense</th>
-<th>Profit</th>
-<th>Status</th>
+<th>Company</th>
+<th>Person</th>
+<th>Source</th>
+<th>Service</th>
+<th>Stage</th>
+<th>Amount</th>
+<th>Time</th>
 </tr>`;
 
-analytics.forEach(a=>{
+leads.forEach(l=>{
 
-let p = a.revenue-a.expense;
-
-let cls = a.status === "Critical" ? "red" : a.status === "Stable" ? "orange" : "";
-
-cityHtml += `
+html += `
 <tr>
-<td>${a.city}</td>
-<td>${money(a.revenue)}</td>
-<td>${money(a.expense)}</td>
-<td>${money(p)}</td>
-<td><span class="badge ${cls}">${a.status}</span></td>
-</tr>`;
-
-});
-
-document.getElementById("cityTable").innerHTML = cityHtml;
-
-let teamHtml = `
-<tr>
-<th>Team</th>
-<th>Orders</th>
-<th>Completed</th>
-<th>Progress</th>
-</tr>`;
-
-analytics.forEach(a=>{
-
-let pct = a.orders ? Math.round((a.completed/a.orders)*100) : 0;
-
-teamHtml += `
-<tr>
-<td>${a.team}</td>
-<td>${a.orders}</td>
-<td>${a.completed}</td>
-<td>
-<div class="progress">
-<div class="bar" style="width:${pct}%"></div>
-</div>
-${pct}%
-</td>
+<td>${l.company}</td>
+<td>${l.person}<br>${l.phone}</td>
+<td>${l.source}</td>
+<td>${l.service}</td>
+<td>${badge(l.stage)}</td>
+<td>${money(l.amount)}</td>
+<td>${l.created}</td>
 </tr>`;
 
 });
 
-document.getElementById("teamTable").innerHTML = teamHtml;
+document.getElementById("leadTable").innerHTML = html;
 
 document.getElementById("summary").innerHTML = `
-<h2>CEO Summary</h2>
+<h2>Sales Funnel Summary</h2>
 
-<p><b>Revenue Engine:</b> ${money(totalRevenue)}</p>
-<p><b>Profit Engine:</b> ${money(profit)}</p>
-<p><b>Operational Completion:</b> ${completion}%</p>
-<p><b>Business Health:</b> ${completion >= 80 ? "Strong" : completion >= 50 ? "Average" : "Critical"}</p>
+<p><b>Total Leads:</b> ${total}</p>
+<p><b>Won Deals:</b> ${won}</p>
+<p><b>Lost Leads:</b> ${lost}</p>
+<p><b>Follow Ups:</b> ${follow}</p>
+
+<div class="progress">
+<div class="bar" style="width:${conversion}%"></div>
+</div>
+
+<p><b>Conversion Rate:</b> ${conversion}%</p>
 
 <p>
-Use this dashboard for owner-level decisions:
-city expansion, team productivity, profitability and execution control.
+Track all Meta Ads, IndiaMART, JustDial and TradeIndia leads from one place.
 </p>
 `;
 
