@@ -3,17 +3,18 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Phase 11 Execution GPS ERP</title>
+<title>Phase 12 Accounts ERP</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:20px}
 .card{background:#111;border:1px solid #333;border-radius:16px;padding:20px;margin-bottom:20px}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 input,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
 button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700}
-.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
 .badge{background:#22c55e20;color:#22c55e;padding:5px 10px;border-radius:999px;font-size:12px}
+.red{background:#ef444420;color:#ef4444}
 </style>
 </head>
 <body>
@@ -21,71 +22,76 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 11 - Execution GPS ERP</h1>
-<p>Execution Tracking + GPS + OCR + Team Monitoring</p>
+<h1>Phase 12 - Accounts ERP</h1>
+<p>Finance + Expenses + Outstanding + Profit Tracking</p>
 </div>
 
 <div class="card">
 
-<h2>Create Execution Entry</h2>
+<h2>Create Account Entry</h2>
 
 <div class="grid">
+
 <div>
 <label>Order ID</label>
 <input id="orderId">
 </div>
 
 <div>
-<label>Execution Team</label>
-<input id="team">
+<label>Company</label>
+<input id="company">
 </div>
 
 <div>
-<label>Vehicle Number</label>
-<input id="vehicle">
-</div>
-
-<div>
-<label>GPS Location</label>
-<input id="gps">
-</div>
-
-<div>
-<label>Photo Count</label>
-<select id="photos">
-<option>1</option>
-<option>3</option>
+<label>Entry Type</label>
+<select id="type">
+<option>Income</option>
+<option>Expense</option>
 </select>
 </div>
 
 <div>
-<label>OCR Status</label>
-<select id="ocr">
-<option>Matched</option>
-<option>Manual Verify</option>
+<label>Amount</label>
+<input id="amount" type="number">
+</div>
+
+<div>
+<label>Payment Mode</label>
+<select id="mode">
+<option>Cash</option>
+<option>Bank</option>
+<option>UPI</option>
 </select>
 </div>
+
+<div>
+<label>Status</label>
+<select id="status">
+<option>Paid</option>
+<option>Outstanding</option>
+</select>
+</div>
+
 </div>
 
 <br>
 
-<button onclick="saveExecution()">Save Execution</button>
+<button onclick="saveEntry()">Save Entry</button>
 
 </div>
 
 <div class="card">
 
-<h2>Execution Reports</h2>
+<h2>Accounts Reports</h2>
 
 <table id="tbl">
 
 <tr>
 <th>Order</th>
-<th>Team</th>
-<th>Vehicle</th>
-<th>GPS</th>
-<th>Photos</th>
-<th>OCR</th>
+<th>Company</th>
+<th>Type</th>
+<th>Amount</th>
+<th>Mode</th>
 <th>Status</th>
 </tr>
 
@@ -93,37 +99,57 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 
 </div>
 
+<div class="card" id="summary"></div>
+
 </div>
 
 <script>
 
-let executions = JSON.parse(localStorage.getItem("executions") || "[]");
+let entries = JSON.parse(localStorage.getItem("accountsEntries") || "[]");
 
 function render(){
 
 let html = `
 <tr>
 <th>Order</th>
-<th>Team</th>
-<th>Vehicle</th>
-<th>GPS</th>
-<th>Photos</th>
-<th>OCR</th>
+<th>Company</th>
+<th>Type</th>
+<th>Amount</th>
+<th>Mode</th>
 <th>Status</th>
 </tr>
 `;
 
-executions.forEach(e=>{
+let income = 0;
+let expense = 0;
+let outstanding = 0;
+
+entries.forEach(e=>{
+
+if(e.type === "Income"){
+income += Number(e.amount);
+}
+
+if(e.type === "Expense"){
+expense += Number(e.amount);
+}
+
+if(e.status === "Outstanding"){
+outstanding += Number(e.amount);
+}
 
 html += `
 <tr>
 <td>${e.orderId}</td>
-<td>${e.team}</td>
-<td>${e.vehicle}</td>
-<td>${e.gps}</td>
-<td>${e.photos}</td>
-<td>${e.ocr}</td>
-<td><span class='badge'>Completed</span></td>
+<td>${e.company}</td>
+<td>${e.type}</td>
+<td>₹${Number(e.amount).toLocaleString("en-IN")}</td>
+<td>${e.mode}</td>
+<td>
+<span class='badge ${e.status === "Outstanding" ? "red" : ""}'>
+${e.status}
+</span>
+</td>
 </tr>
 `;
 
@@ -131,24 +157,33 @@ html += `
 
 document.getElementById("tbl").innerHTML = html;
 
+document.getElementById("summary").innerHTML = `
+<h2>Finance Summary</h2>
+
+<h3>Total Income : ₹${income.toLocaleString("en-IN")}</h3>
+<h3>Total Expense : ₹${expense.toLocaleString("en-IN")}</h3>
+<h3>Outstanding : ₹${outstanding.toLocaleString("en-IN")}</h3>
+<h3>Estimated Profit : ₹${(income-expense).toLocaleString("en-IN")}</h3>
+`;
+
 }
 
-function saveExecution(){
+function saveEntry(){
 
-executions.unshift({
+entries.unshift({
 orderId : document.getElementById("orderId").value,
-team : document.getElementById("team").value,
-vehicle : document.getElementById("vehicle").value,
-gps : document.getElementById("gps").value,
-photos : document.getElementById("photos").value,
-ocr : document.getElementById("ocr").value
+company : document.getElementById("company").value,
+type : document.getElementById("type").value,
+amount : document.getElementById("amount").value,
+mode : document.getElementById("mode").value,
+status : document.getElementById("status").value
 });
 
-localStorage.setItem("executions", JSON.stringify(executions));
+localStorage.setItem("accountsEntries", JSON.stringify(entries));
 
 render();
 
-alert("Execution Saved");
+alert("Account Entry Saved");
 
 }
 
