@@ -1,96 +1,420 @@
+
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MediaHub Enterprise Working</title>
+<title>MediaHub Phase 7</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial;background:#050506;color:#fff}
-.layout{display:grid;grid-template-columns:270px 1fr;min-height:100vh}
-.sidebar{background:#111;padding:22px;border-right:1px solid #333}
-.logo{font-size:38px;font-weight:900;margin-bottom:24px;letter-spacing:1px}
+body{margin:0;background:#050506;color:#fff;font-family:Arial}
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.sidebar{background:#111;padding:20px;border-right:1px solid #333}
+.logo{font-size:42px;font-weight:900;margin-bottom:25px}
 .logo span{color:#ff6b00}
-.menu{display:grid;gap:10px}
-.menu button{padding:14px;border:1px solid #333;border-radius:12px;background:#1a1b22;color:#fff;font-weight:800;cursor:pointer;text-align:left}
-.menu button:hover{border-color:#ff6b00}
+.menu button{width:100%;padding:14px;margin-bottom:10px;border-radius:12px;border:1px solid #333;background:#1a1b22;color:#fff;font-weight:700;cursor:pointer;text-align:left}
 .content{padding:24px}
-.card,.section{background:#111;border:1px solid #333;border-radius:18px;padding:20px;margin-bottom:18px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.top h1{margin:0;font-size:34px}.top p{color:#aaa}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
-.stat{background:#17181f;border:1px solid #333;border-radius:16px;padding:18px}
-.stat h3{font-size:12px;color:#aaa;margin:0 0 8px}.stat h1{color:#ff6b00;margin:0}
-.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.full{grid-column:1/-1}
-label{font-size:11px;color:#aaa;font-weight:900;text-transform:uppercase}
-input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#090909;color:#fff;margin-top:6px}
-textarea{min-height:90px}
-.btn{padding:12px 16px;border:0;border-radius:10px;background:#ff6b00;color:#111;font-weight:900;cursor:pointer}
-.btn.red{background:#ef4444;color:#fff}.btn.green{background:#22c55e;color:#06130b}.btn.dark{background:#1a1b22;color:#fff;border:1px solid #333}.btn.small{padding:7px 9px;font-size:12px}
-table{width:100%;border-collapse:collapse;background:#111}
-th,td{padding:11px;border-bottom:1px solid #333;text-align:left;font-size:13px;vertical-align:top}
-th{color:#aaa;text-transform:uppercase;font-size:11px}
-.table{overflow:auto;border:1px solid #333;border-radius:14px}
-.badge{display:inline-block;background:#ff6b0020;color:#ff6b00;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:900}
-.badge.ok{background:#22c55e20;color:#22c55e}.badge.red{background:#ef444420;color:#ef4444}.badge.blue{background:#38bdf820;color:#38bdf8}
-.locrow{display:grid;grid-template-columns:1fr .5fr .8fr auto;gap:10px;align-items:end}
-.progress{display:flex;gap:4px;flex-wrap:wrap}
-.step{border:1px solid #333;border-radius:8px;padding:6px;font-size:10px;color:#999}
-.step.done{border-color:#22c55e;color:#22c55e}.step.current{border-color:#ff6b00;color:#ff6b00}
-@media(max-width:900px){.layout,.form,.locrow{grid-template-columns:1fr}.sidebar{border-right:0}.top{flex-direction:column;align-items:flex-start}}
+.card{background:#111;border:1px solid #333;border-radius:18px;padding:20px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input,select,textarea{width:100%;padding:12px;border-radius:10px;background:#090909;color:#fff;border:1px solid #333;margin-top:6px}
+textarea{min-height:80px}
+.btn{padding:12px 16px;background:#ff6b00;border:none;border-radius:10px;font-weight:900;cursor:pointer}
+.btn2{padding:8px 12px;background:#1f2937;border:1px solid #333;color:#fff;border-radius:8px;cursor:pointer}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
+.badge{padding:5px 10px;border-radius:999px;background:#ff6b0020;color:#ff6b00;font-size:11px;font-weight:900}
 </style>
 </head>
 <body>
+
 <div class="layout">
-<aside class="sidebar">
+
+<div class="sidebar">
 <div class="logo">MEDIA<span>HUB</span></div>
+
 <div class="menu">
-<button onclick="show('dashboard')">📊 Dashboard</button>
-<button onclick="show('create')">➕ Create Order</button>
-<button onclick="show('orders')">📋 Orders</button>
-<button onclick="show('approval')">✅ Approval</button>
-<button onclick="show('design')">🎨 Design</button>
-<button onclick="show('printing')">🖨 Printing</button>
-<button onclick="show('stitching')">🪡 Stitching</button>
-<button onclick="show('dispatch')">🚚 Dispatch</button>
-<button onclick="show('execution')">📍 Execution</button>
-<button onclick="show('accounts')">💰 Accounts</button>
-<button onclick="show('reports')">📄 Reports</button>
+<button onclick="dashboard()">Dashboard</button>
+<button onclick="createOrder()">Create Order</button>
+<button onclick="ordersPage()">Orders</button>
+<button onclick="designPage()">Design Approval</button>
 </div>
-</aside>
-<main class="content" id="content"></main>
 </div>
+
+<div class="content" id="content"></div>
+
+</div>
+
 <script>
-const pipe=["New","Approved","Design","Printing","Stitching","Dispatch","Execution","Accounts","Done"];
-let orders=JSON.parse(localStorage.getItem("mediahub_enterprise_orders")||"[]");
-let locs=[];
-function save(){localStorage.setItem("mediahub_enterprise_orders",JSON.stringify(orders))}
-function money(n){return "₹"+Number(n||0).toLocaleString("en-IN")}
-function badge(s){let c=s==="Approved"||s==="Done"?"ok":s==="Rejected"?"red":s==="New"?"blue":"";return "<span class='badge "+c+"'>"+s+"</span>"}
-function progress(o){let i=Math.max(0,pipe.indexOf(o.status));return "<div class='progress'>"+pipe.slice(0,8).map((p,x)=>"<span class='step "+(x<i?"done":x===i?"current":"")+"'>"+p+"</span>").join("")+"</div>"}
-function locText(o){return (o.locations||[]).map(l=>l.city+": "+l.qty+" ("+l.design+")").join("<br>")}
-function top(t,s){return "<div class='card top'><div><h1>"+t+"</h1><p>"+(s||"")+"</p></div><button class='btn dark' onclick='backup()'>Backup</button></div>"}
-function stats(){let revenue=orders.reduce((a,o)=>a+Number(o.final||0),0),qty=orders.reduce((a,o)=>a+Number(o.qty||0),0),adv=orders.reduce((a,o)=>a+Number(o.advance||0),0),exp=orders.reduce((a,o)=>a+Number(o.expenses||0),0);return "<div class='grid'><div class='stat'><h3>Total Orders</h3><h1>"+orders.length+"</h1></div><div class='stat'><h3>Total Qty</h3><h1>"+qty+"</h1></div><div class='stat'><h3>Revenue</h3><h1>"+money(revenue)+"</h1></div><div class='stat'><h3>Collection</h3><h1>"+money(adv)+"</h1></div><div class='stat'><h3>Expenses</h3><h1>"+money(exp)+"</h1></div><div class='stat'><h3>Profit</h3><h1>"+money(revenue-exp)+"</h1></div></div>"}
-function table(headers,rows){return "<div class='table'><table><tr>"+headers.map(h=>"<th>"+h+"</th>").join("")+"</tr>"+(rows.join("")||"<tr><td colspan='10'>No data</td></tr>")+"</table></div>"}
-function show(page){if(page==="dashboard")dashboard();if(page==="create")create();if(page==="orders")ordersPage();if(page==="approval")approval();if(page==="design")modulePage("Design Department","Approved","Design");if(page==="printing")modulePage("Printing Department","Design","Printing");if(page==="stitching")modulePage("Stitching Department","Printing","Stitching");if(page==="dispatch")modulePage("Dispatch Department","Stitching","Dispatch");if(page==="execution")modulePage("Execution Department","Dispatch","Execution");if(page==="accounts")accounts();if(page==="reports")reports()}
-function dashboard(){content.innerHTML=top("MediaHub Enterprise Dashboard","Real working ERP flow")+stats()+ordersTable()}
-function create(){locs=[];content.innerHTML=top("Create Real Order","Multi-city, GST, payment, workflow")+"<div class='section'><h2>Order Details</h2><div class='form'><div><label>Company</label><input id='company'></div><div><label>Person</label><input id='person'></div><div><label>Contact</label><input id='contact'></div><div><label>Lead Source</label><select id='source'><option>Manual</option><option>Meta Ads</option><option>IndiaMART</option><option>JustDial</option></select></div><div><label>Media</label><select id='media'><option>Auto Rickshaw Hood Branding</option><option>Auto Rickshaw Back Panel</option><option>No Parking Board</option><option>Flex Printing</option><option>Digital Wall Wrap</option></select></div><div><label>Rate Per PCS</label><input id='rate' type='number' oninput='calcShow()'></div><div><label>GST Type</label><select id='gstType' onchange='calcShow()'><option>GST</option><option>Non GST</option></select></div><div><label>Part Payment</label><input id='advance' type='number' value='0' oninput='calcShow()'></div><div class='full'><label>Notes</label><textarea id='notes'></textarea></div></div></div><div class='section'><h2>Location Split</h2><div class='locrow'><div><label>City / Location</label><input id='city'></div><div><label>Qty</label><input id='qty' type='number'></div><div><label>Design</label><select id='design'><option>Same Design</option><option>Different Design</option></select></div><button class='btn small' onclick='addLoc()'>Add</button></div><div id='locBox'></div></div><div class='grid'><div class='stat'><h3>Total Qty</h3><h1 id='tq'>0</h1></div><div class='stat'><h3>Base</h3><h1 id='base'>₹0</h1></div><div class='stat'><h3>GST</h3><h1 id='gst'>₹0</h1></div><div class='stat'><h3>Final</h3><h1 id='final'>₹0</h1></div></div><br><button class='btn' onclick='saveOrder()'>Create Order</button>"}
-function addLoc(){let city=document.getElementById("city").value,qty=Number(document.getElementById("qty").value||0),design=document.getElementById("design").value;if(!city||!qty){alert("City and Qty required");return}locs.push({city,qty,design});document.getElementById("city").value="";document.getElementById("qty").value="";renderLoc();calcShow()}
-function renderLoc(){locBox.innerHTML=table(["City","Qty","Design"],locs.map(l=>"<tr><td>"+l.city+"</td><td>"+l.qty+"</td><td>"+l.design+"</td></tr>"))}
-function calc(){let qty=locs.reduce((a,l)=>a+Number(l.qty||0),0),rate=Number(document.getElementById("rate")?.value||0),base=qty*rate,gst=document.getElementById("gstType")?.value==="GST"?Math.round(base*.18):0,final=base+gst,advance=Number(document.getElementById("advance")?.value||0);return{qty,rate,base,gst,final,advance,balance:final-advance}}
-function calcShow(){let c=calc();if(document.getElementById("tq")){tq.innerText=c.qty;base.innerText=money(c.base);gst.innerText=money(c.gst);final.innerText=money(c.final)}}
-function saveOrder(){let c=calc(),company=document.getElementById("company").value;if(!company||!locs.length||!c.rate){alert("Company, Location and Rate required");return}orders.unshift({id:"ORD-"+Date.now(),company,person:person.value,contact:contact.value,source:source.value,media:media.value,locations:[...locs],qty:c.qty,rate:c.rate,base:c.base,gst:c.gst,final:c.final,advance:c.advance,balance:c.balance,expenses:0,notes:notes.value,status:"New",timeline:[{time:new Date().toLocaleString("en-IN"),msg:"Order created"}]});save();show("approval")}
-function move(id,status){let o=orders.find(x=>x.id===id);o.status=status;o.timeline.push({time:new Date().toLocaleString("en-IN"),msg:"Moved to "+status});save();show(status==="Approved"?"design":status.toLowerCase())}
-function approval(){content.innerHTML=top("Admin Approval","Approve new orders")+table(["Order","Company","Qty","Amount","Status","Action"],orders.filter(o=>o.status==="New").map(o=>"<tr><td>"+o.id+"</td><td>"+o.company+"</td><td>"+o.qty+"</td><td>"+money(o.final)+"</td><td>"+badge(o.status)+"</td><td><button class='btn small green' onclick=\"move('"+o.id+"','Approved')\">Approve</button> <button class='btn small red' onclick=\"move('"+o.id+"','Rejected')\">Reject</button></td></tr>"))}
-function modulePage(title,from,next){content.innerHTML=top(title,"Move orders to next department")+table(["Order","Company","Locations","Qty","Amount","Status","Action"],orders.filter(o=>o.status===from).map(o=>"<tr><td>"+o.id+"</td><td>"+o.company+"</td><td>"+locText(o)+"</td><td>"+o.qty+"</td><td>"+money(o.final)+"</td><td>"+badge(o.status)+"</td><td><button class='btn small' onclick=\"move('"+o.id+"','"+next+"')\">Move Next</button></td></tr>"))}
-function accounts(){content.innerHTML=top("Accounts","Enter expense and close order")+table(["Order","Company","Amount","Balance","Expense","Action"],orders.filter(o=>o.status==="Execution").map(o=>"<tr><td>"+o.id+"</td><td>"+o.company+"</td><td>"+money(o.final)+"</td><td>"+money(o.balance)+"</td><td><input id='exp_"+o.id+"' type='number' placeholder='Expense'></td><td><button class='btn small green' onclick=\"closeOrder('"+o.id+"')\">Close</button></td></tr>"))}
-function closeOrder(id){let o=orders.find(x=>x.id===id);o.expenses=Number(document.getElementById("exp_"+id).value||0);o.status="Done";save();reports()}
-function ordersTable(){return "<div class='section'><h2>Orders List</h2>"+table(["Order","Company","Media","Locations","Qty","Amount","Status","Progress"],orders.map(o=>"<tr><td>"+o.id+"</td><td>"+o.company+"</td><td>"+o.media+"</td><td>"+locText(o)+"</td><td>"+o.qty+"</td><td>"+money(o.final)+"<br>Bal: "+money(o.balance)+"</td><td>"+badge(o.status)+"</td><td>"+progress(o)+"</td></tr>"))+"</div>"}
-function ordersPage(){content.innerHTML=top("Orders","All orders")+ordersTable()}
-function reports(){content.innerHTML=top("Reports","Analytics and full data")+stats()+ordersTable()}
-function backup(){let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(orders,null,2)]));a.download="mediahub_backup.json";a.click()}
-dashboard()
+
+let orders = JSON.parse(localStorage.getItem("mh_phase7_orders") || "[]");
+
+function saveDB(){
+localStorage.setItem("mh_phase7_orders", JSON.stringify(orders));
+}
+
+function dashboard(){
+
+let total = 0;
+
+orders.forEach(o=>{
+total += Number(o.final || 0);
+});
+
+content.innerHTML = `
+<div class='card'>
+<h1>Phase 7 Dashboard</h1>
+<p>Design + Client Approval System</p>
+</div>
+
+<div class='grid'>
+
+<div class='card'>
+<h3>Total Orders</h3>
+<h1>${orders.length}</h1>
+</div>
+
+<div class='card'>
+<h3>Total Revenue</h3>
+<h1>₹${total.toLocaleString("en-IN")}</h1>
+</div>
+
+</div>
+`;
+
+}
+
+let locations = [];
+
+function createOrder(){
+
+locations = [];
+
+content.innerHTML = `
+<div class='card'>
+
+<h1>Create Real Order</h1>
+
+<div class='grid'>
+
+<div>
+<label>Company</label>
+<input id='company'>
+</div>
+
+<div>
+<label>Person</label>
+<input id='person'>
+</div>
+
+<div>
+<label>Contact</label>
+<input id='contact'>
+</div>
+
+<div>
+<label>Rate Per PCS</label>
+<input type='number' id='rate' oninput='updateTotals()'>
+</div>
+
+</div>
+
+<br>
+
+<h2>Multi City Split</h2>
+
+<div class='grid'>
+
+<div>
+<label>Location</label>
+<input id='city'>
+</div>
+
+<div>
+<label>Quantity</label>
+<input type='number' id='qty'>
+</div>
+
+<div>
+<label>Design Type</label>
+<select id='designType'>
+<option>Same Design</option>
+<option>Different Design</option>
+</select>
+</div>
+
+<div>
+<label>Design Upload</label>
+<input type='file' id='designUpload'>
+</div>
+
+</div>
+
+<br>
+
+<button class='btn2' onclick='addLocation()'>Add Location</button>
+
+<br><br>
+
+<div id='locationTable'></div>
+
+<br>
+
+<div class='grid'>
+
+<div class='card'>
+<h3>Total Qty</h3>
+<h1 id='totalQty'>0</h1>
+</div>
+
+<div class='card'>
+<h3>Final Amount</h3>
+<h1 id='finalAmount'>₹0</h1>
+</div>
+
+</div>
+
+<button class='btn' onclick='saveOrder()'>Create Order</button>
+
+</div>
+`;
+
+}
+
+function addLocation(){
+
+let city = document.getElementById("city").value;
+let qty = Number(document.getElementById("qty").value || 0);
+let designType = document.getElementById("designType").value;
+let file = document.getElementById("designUpload").files[0];
+
+if(!city || !qty){
+alert("Enter location and quantity");
+return;
+}
+
+locations.push({
+city,
+qty,
+designType,
+designFile : file ? file.name : "Not Uploaded"
+});
+
+renderLocations();
+
+}
+
+function renderLocations(){
+
+let html = `
+<table>
+<tr>
+<th>City</th>
+<th>Qty</th>
+<th>Design</th>
+<th>File</th>
+</tr>
+`;
+
+locations.forEach(l=>{
+
+html += `
+<tr>
+<td>${l.city}</td>
+<td>${l.qty}</td>
+<td>${l.designType}</td>
+<td>${l.designFile}</td>
+</tr>
+`;
+
+});
+
+html += "</table>";
+
+document.getElementById("locationTable").innerHTML = html;
+
+updateTotals();
+
+}
+
+function updateTotals(){
+
+let qty = 0;
+
+locations.forEach(l=>{
+qty += Number(l.qty);
+});
+
+let rate = Number(document.getElementById("rate")?.value || 0);
+
+let total = qty * rate;
+
+document.getElementById("totalQty").innerText = qty;
+document.getElementById("finalAmount").innerText = "₹" + total.toLocaleString("en-IN");
+
+}
+
+function saveOrder(){
+
+let qty = 0;
+
+locations.forEach(l=>{
+qty += Number(l.qty);
+});
+
+let rate = Number(document.getElementById("rate").value || 0);
+
+let total = qty * rate;
+
+orders.unshift({
+id : "ORD-" + Date.now(),
+company : document.getElementById("company").value,
+person : document.getElementById("person").value,
+contact : document.getElementById("contact").value,
+qty : qty,
+rate : rate,
+final : total,
+status : "Pending Design",
+clientApproval : "Pending",
+locations : locations
+});
+
+saveDB();
+
+alert("Order Created");
+
+ordersPage();
+
+}
+
+function ordersPage(){
+
+let rows = "";
+
+orders.forEach(o=>{
+
+rows += `
+<tr>
+<td>${o.id}</td>
+<td>${o.company}</td>
+<td>${o.qty}</td>
+<td>₹${o.final.toLocaleString("en-IN")}</td>
+<td><span class='badge'>${o.status}</span></td>
+<td>${o.clientApproval}</td>
+</tr>
+`;
+
+});
+
+content.innerHTML = `
+<div class='card'>
+
+<h1>Orders</h1>
+
+<table>
+
+<tr>
+<th>Order</th>
+<th>Company</th>
+<th>Qty</th>
+<th>Amount</th>
+<th>Status</th>
+<th>Client Approval</th>
+</tr>
+
+${rows}
+
+</table>
+
+</div>
+`;
+
+}
+
+function designPage(){
+
+let rows = "";
+
+orders.forEach(o=>{
+
+rows += `
+<tr>
+<td>${o.id}</td>
+<td>${o.company}</td>
+<td>${o.locations.map(x=>x.city).join(", ")}</td>
+<td>${o.locations.map(x=>x.designType).join(", ")}</td>
+<td>${o.clientApproval}</td>
+
+<td>
+<button class='btn2' onclick="approveClient('${o.id}')">Approve</button>
+<button class='btn2' onclick="rejectClient('${o.id}')">Reject</button>
+</td>
+
+</tr>
+`;
+
+});
+
+content.innerHTML = `
+<div class='card'>
+
+<h1>Design + Client Approval</h1>
+
+<table>
+
+<tr>
+<th>Order</th>
+<th>Company</th>
+<th>Locations</th>
+<th>Design</th>
+<th>Approval</th>
+<th>Action</th>
+</tr>
+
+${rows}
+
+</table>
+
+</div>
+`;
+
+}
+
+function approveClient(id){
+
+orders.forEach(o=>{
+
+if(o.id === id){
+o.clientApproval = "Approved";
+o.status = "Ready For Printing";
+}
+
+});
+
+saveDB();
+
+designPage();
+
+}
+
+function rejectClient(id){
+
+orders.forEach(o=>{
+
+if(o.id === id){
+o.clientApproval = "Revision Required";
+o.status = "Design Revision";
+}
+
+});
+
+saveDB();
+
+designPage();
+
+}
+
+dashboard();
+
 </script>
+
 </body>
 </html>
