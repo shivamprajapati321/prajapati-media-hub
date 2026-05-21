@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Phase 12 Accounts ERP</title>
+<title>Phase 13 Admin ERP</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:20px}
@@ -14,7 +14,7 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
 .badge{background:#22c55e20;color:#22c55e;padding:5px 10px;border-radius:999px;font-size:12px}
-.red{background:#ef444420;color:#ef4444}
+.blue{background:#38bdf820;color:#38bdf8}
 </style>
 </head>
 <body>
@@ -22,53 +22,40 @@ th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 12 - Accounts ERP</h1>
-<p>Finance + Expenses + Outstanding + Profit Tracking</p>
+<h1>Phase 13 - Admin Enterprise Layer</h1>
+<p>Roles + Permissions + Activity Logs + Team Control</p>
 </div>
 
 <div class="card">
 
-<h2>Create Account Entry</h2>
+<h2>Create User</h2>
 
 <div class="grid">
 
 <div>
-<label>Order ID</label>
-<input id="orderId">
+<label>Name</label>
+<input id="name">
 </div>
 
 <div>
-<label>Company</label>
-<input id="company">
-</div>
-
-<div>
-<label>Entry Type</label>
-<select id="type">
-<option>Income</option>
-<option>Expense</option>
-</select>
-</div>
-
-<div>
-<label>Amount</label>
-<input id="amount" type="number">
-</div>
-
-<div>
-<label>Payment Mode</label>
-<select id="mode">
-<option>Cash</option>
-<option>Bank</option>
-<option>UPI</option>
+<label>Department</label>
+<select id="department">
+<option>Admin</option>
+<option>Sales</option>
+<option>Design</option>
+<option>Printing</option>
+<option>Stitching</option>
+<option>Dispatch</option>
+<option>Execution</option>
+<option>Accounts</option>
 </select>
 </div>
 
 <div>
 <label>Status</label>
 <select id="status">
-<option>Paid</option>
-<option>Outstanding</option>
+<option>Active</option>
+<option>Inactive</option>
 </select>
 </div>
 
@@ -76,23 +63,21 @@ th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
 
 <br>
 
-<button onclick="saveEntry()">Save Entry</button>
+<button onclick="saveUser()">Create User</button>
 
 </div>
 
 <div class="card">
 
-<h2>Accounts Reports</h2>
+<h2>Users & Permissions</h2>
 
 <table id="tbl">
 
 <tr>
-<th>Order</th>
-<th>Company</th>
-<th>Type</th>
-<th>Amount</th>
-<th>Mode</th>
+<th>Name</th>
+<th>Department</th>
 <th>Status</th>
+<th>Permissions</th>
 </tr>
 
 </table>
@@ -105,50 +90,38 @@ th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
 
 <script>
 
-let entries = JSON.parse(localStorage.getItem("accountsEntries") || "[]");
+let users = JSON.parse(localStorage.getItem("adminUsers") || "[]");
 
 function render(){
 
 let html = `
 <tr>
-<th>Order</th>
-<th>Company</th>
-<th>Type</th>
-<th>Amount</th>
-<th>Mode</th>
+<th>Name</th>
+<th>Department</th>
 <th>Status</th>
+<th>Permissions</th>
 </tr>
 `;
 
-let income = 0;
-let expense = 0;
-let outstanding = 0;
+let active = 0;
 
-entries.forEach(e=>{
+users.forEach(u=>{
 
-if(e.type === "Income"){
-income += Number(e.amount);
-}
-
-if(e.type === "Expense"){
-expense += Number(e.amount);
-}
-
-if(e.status === "Outstanding"){
-outstanding += Number(e.amount);
+if(u.status === "Active"){
+active++;
 }
 
 html += `
 <tr>
-<td>${e.orderId}</td>
-<td>${e.company}</td>
-<td>${e.type}</td>
-<td>₹${Number(e.amount).toLocaleString("en-IN")}</td>
-<td>${e.mode}</td>
+<td>${u.name}</td>
+<td>${u.department}</td>
 <td>
-<span class='badge ${e.status === "Outstanding" ? "red" : ""}'>
-${e.status}
+<span class='badge ${u.status === "Inactive" ? "blue" : ""}'>
+${u.status}
 </span>
+</td>
+<td>
+Dashboard, Reports, Department Access
 </td>
 </tr>
 `;
@@ -158,32 +131,29 @@ ${e.status}
 document.getElementById("tbl").innerHTML = html;
 
 document.getElementById("summary").innerHTML = `
-<h2>Finance Summary</h2>
+<h2>Admin Summary</h2>
 
-<h3>Total Income : ₹${income.toLocaleString("en-IN")}</h3>
-<h3>Total Expense : ₹${expense.toLocaleString("en-IN")}</h3>
-<h3>Outstanding : ₹${outstanding.toLocaleString("en-IN")}</h3>
-<h3>Estimated Profit : ₹${(income-expense).toLocaleString("en-IN")}</h3>
+<h3>Total Users : ${users.length}</h3>
+<h3>Active Users : ${active}</h3>
+<h3>Inactive Users : ${users.length-active}</h3>
+<h3>Enterprise Admin Layer Ready</h3>
 `;
 
 }
 
-function saveEntry(){
+function saveUser(){
 
-entries.unshift({
-orderId : document.getElementById("orderId").value,
-company : document.getElementById("company").value,
-type : document.getElementById("type").value,
-amount : document.getElementById("amount").value,
-mode : document.getElementById("mode").value,
+users.unshift({
+name : document.getElementById("name").value,
+department : document.getElementById("department").value,
 status : document.getElementById("status").value
 });
 
-localStorage.setItem("accountsEntries", JSON.stringify(entries));
+localStorage.setItem("adminUsers", JSON.stringify(users));
 
 render();
 
-alert("Account Entry Saved");
+alert("User Created");
 
 }
 
