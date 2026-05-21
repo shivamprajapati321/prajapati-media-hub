@@ -1,5 +1,1 @@
-window.PMH={
-PASSWORD:"9922138138",
-VERSION:"5C",
-COMPANY:"Prajapati Advertising"
-};
+window.PMH_CONFIG={PASSWORD:"9922138138",COMPANY:"Prajapati Advertising",VERSION:"Phase 6"};
