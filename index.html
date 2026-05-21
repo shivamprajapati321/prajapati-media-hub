@@ -1,1 +1,165 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MediaHub Phase 6</title><link rel="stylesheet" href="styles.css"></head><body><div id="app"></div><script src="config.js"></script><script src="app.js"></script></body></html>
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>MediaHub ERP</title>
+<style>
+body{margin:0;font-family:Arial;background:#050506;color:#fff}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:240px;background:#111;padding:20px}
+.logo{font-size:38px;font-weight:900;margin-bottom:20px}
+.logo span{color:#ff6b00}
+.menu button{width:100%;padding:14px;margin-bottom:10px;background:#1a1b22;border:none;border-radius:10px;color:#fff}
+.content{flex:1;padding:20px}
+.card{background:#111;border:1px solid #333;padding:20px;border-radius:16px;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#090909;color:#fff;margin-top:6px}
+.orange{background:#ff6b00;color:#000;font-weight:900;padding:14px;border:none;border-radius:10px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<div class="sidebar">
+<div class="logo">MEDIA<span>HUB</span></div>
+
+<div class="menu">
+<button onclick="dashboard()">Dashboard</button>
+<button onclick="createOrder()">Create Order</button>
+<button onclick="ordersList()">Orders</button>
+</div>
+</div>
+
+<div class="content" id="content"></div>
+
+</div>
+
+<script>
+
+let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
+function dashboard(){
+
+document.getElementById("content").innerHTML = `
+<div class='card'>
+<h1>MediaHub Dashboard</h1>
+<p>Stable Working Build</p>
+</div>
+`;
+
+}
+
+function createOrder(){
+
+document.getElementById("content").innerHTML = `
+<div class='card'>
+<h1>Create Order</h1>
+
+<div class='grid'>
+
+<div>
+<label>Company</label>
+<input id='company'>
+</div>
+
+<div>
+<label>City</label>
+<input id='city'>
+</div>
+
+<div>
+<label>Quantity</label>
+<input type='number' id='qty'>
+</div>
+
+<div>
+<label>Rate</label>
+<input type='number' id='rate'>
+</div>
+
+</div>
+
+<br>
+
+<button class='orange' onclick='saveOrder()'>Save Order</button>
+
+</div>
+`;
+
+}
+
+function saveOrder(){
+
+let company = document.getElementById("company").value;
+let city = document.getElementById("city").value;
+let qty = Number(document.getElementById("qty").value || 0);
+let rate = Number(document.getElementById("rate").value || 0);
+
+let total = qty * rate;
+
+orders.unshift({
+id : "ORD-" + Date.now(),
+company : company,
+city : city,
+qty : qty,
+total : total
+});
+
+localStorage.setItem("orders", JSON.stringify(orders));
+
+alert("Order Saved");
+
+ordersList();
+
+}
+
+function ordersList(){
+
+let rows = "";
+
+orders.forEach(function(o){
+
+rows += `
+<tr>
+<td>${o.id}</td>
+<td>${o.company}</td>
+<td>${o.city}</td>
+<td>${o.qty}</td>
+<td>₹${o.total}</td>
+</tr>
+`;
+
+});
+
+document.getElementById("content").innerHTML = `
+<div class='card'>
+<h1>Orders</h1>
+
+<table>
+<tr>
+<th>Order</th>
+<th>Company</th>
+<th>City</th>
+<th>Qty</th>
+<th>Total</th>
+</tr>
+
+${rows}
+
+</table>
+
+</div>
+`;
+
+}
+
+dashboard();
+
+</script>
+
+</body>
+</html>
