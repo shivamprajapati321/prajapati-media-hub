@@ -3,25 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MediaHub Phase 21 Sales CRM</title>
+<title>MediaHub Phase 22 Quotation & Invoice</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:18px}
 .card{background:#111;border:1px solid #333;border-radius:16px;padding:18px;margin-bottom:18px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+input,select,textarea{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
+button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;color:#111;cursor:pointer}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
+.badge{padding:5px 10px;border-radius:999px;background:#22c55e20;color:#22c55e;font-size:11px;font-weight:700}
+.orange{background:#ff6b0020;color:#ff6b00}
+.preview{background:#0b0b0b;border:1px solid #333;border-radius:12px;padding:16px;white-space:pre-line}
 .stat{background:#17181f;border:1px solid #333;border-radius:14px;padding:16px}
 .stat h3{margin:0 0 8px;color:#aaa;font-size:12px}
 .stat h1{margin:0;color:#ff6b00}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
-input,select,textarea{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
-button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;color:#111;cursor:pointer}
-.badge{padding:5px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#22c55e20;color:#22c55e}
-.orange{background:#ff6b0020;color:#ff6b00}
-.red{background:#ef444420;color:#ef4444}
-.blue{background:#38bdf820;color:#38bdf8}
-.progress{height:10px;background:#242424;border-radius:999px;overflow:hidden}
-.bar{height:100%;background:#ff6b00}
 </style>
 </head>
 <body>
@@ -29,33 +26,38 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 21 - Sales CRM + Lead Funnel</h1>
-<p>Lead capture + follow-up + quotation + conversion analytics</p>
+<h1>Phase 22 - Quotation & Invoice ERP</h1>
+<p>Quotation creation + GST invoice + payment summary</p>
 </div>
 
-<div class="grid" id="stats"></div>
-
 <div class="card">
-<h2>Add Lead</h2>
 
-<table>
-<tr>
-<td><input id="company" placeholder="Company Name"></td>
-<td><input id="person" placeholder="Person Name"></td>
-<td><input id="phone" placeholder="Phone"></td>
-<td>
-<select id="source">
-<option>Meta Ads</option>
-<option>IndiaMART</option>
-<option>JustDial</option>
-<option>TradeIndia</option>
-<option>Manual</option>
-</select>
-</td>
-</tr>
+<h2>Create Quotation / Invoice</h2>
 
-<tr>
-<td>
+<div class="grid">
+
+<div>
+<label>Company</label>
+<input id="company">
+</div>
+
+<div>
+<label>Person</label>
+<input id="person">
+</div>
+
+<div>
+<label>Contact</label>
+<input id="contact">
+</div>
+
+<div>
+<label>City</label>
+<input id="city">
+</div>
+
+<div>
+<label>Service</label>
 <select id="service">
 <option>Auto Rickshaw Hood Branding</option>
 <option>Back Panel</option>
@@ -63,161 +65,210 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 <option>Wall Wrap</option>
 <option>No Parking Board</option>
 </select>
-</td>
+</div>
 
-<td>
-<select id="stage">
-<option>New Lead</option>
-<option>Follow Up</option>
-<option>Quotation Sent</option>
-<option>Negotiation</option>
-<option>Won</option>
-<option>Lost</option>
+<div>
+<label>Quantity</label>
+<input id="qty" type="number" oninput="calc()">
+</div>
+
+<div>
+<label>Rate Per PCS</label>
+<input id="rate" type="number" oninput="calc()">
+</div>
+
+<div>
+<label>GST Type</label>
+<select id="gstType" onchange="calc()">
+<option>GST</option>
+<option>Non GST</option>
 </select>
-</td>
+</div>
 
-<td><input id="amount" type="number" placeholder="Quotation Amount"></td>
+<div>
+<label>Advance Payment</label>
+<input id="advance" type="number" oninput="calc()">
+</div>
 
-<td><button onclick="saveLead()">Save Lead</button></td>
-</tr>
-</table>
+<div>
+<label>Status</label>
+<select id="status">
+<option>Quotation</option>
+<option>Invoice</option>
+<option>Paid</option>
+<option>Outstanding</option>
+</select>
+</div>
+
+</div>
+
+<br>
+
+<button onclick="saveDoc()">Save Document</button>
+
+</div>
+
+<div class="grid">
+
+<div class="stat">
+<h3>Base Amount</h3>
+<h1 id="base">₹0</h1>
+</div>
+
+<div class="stat">
+<h3>GST</h3>
+<h1 id="gst">₹0</h1>
+</div>
+
+<div class="stat">
+<h3>Final Amount</h3>
+<h1 id="final">₹0</h1>
+</div>
+
+<div class="stat">
+<h3>Balance</h3>
+<h1 id="balance">₹0</h1>
+</div>
 
 </div>
 
 <div class="card">
-<h2>Lead Funnel</h2>
-<table id="leadTable"></table>
+<h2>Saved Documents</h2>
+<table id="docTable"></table>
 </div>
 
 <div class="card">
-<h2>Sales Performance</h2>
-<div id="summary"></div>
+<h2>Preview</h2>
+<div id="preview" class="preview">No document selected.</div>
 </div>
 
 </div>
 
 <script>
 
-let leads = JSON.parse(localStorage.getItem("mh21_leads") || "[]");
-
-function save(){
-localStorage.setItem("mh21_leads", JSON.stringify(leads));
-}
+let docs = JSON.parse(localStorage.getItem("mh22_docs") || "[]");
 
 function money(x){
 return "₹" + Number(x || 0).toLocaleString("en-IN");
 }
 
-function badge(stage){
+function calc(){
 
-let cls = "";
+let qty = Number(document.getElementById("qty").value || 0);
+let rate = Number(document.getElementById("rate").value || 0);
+let advance = Number(document.getElementById("advance").value || 0);
 
-if(stage === "Won"){
-cls = "";
-}
-else if(stage === "Negotiation"){
-cls = "orange";
-}
-else if(stage === "Lost"){
-cls = "red";
-}
-else{
-cls = "blue";
+let base = qty * rate;
+
+let gst = document.getElementById("gstType").value === "GST"
+? Math.round(base * 0.18)
+: 0;
+
+let final = base + gst;
+let balance = final - advance;
+
+document.getElementById("base").innerText = money(base);
+document.getElementById("gst").innerText = money(gst);
+document.getElementById("final").innerText = money(final);
+document.getElementById("balance").innerText = money(balance);
+
+return {base,gst,final,balance};
+
 }
 
-return `<span class="badge ${cls}">${stage}</span>`;
+function saveDoc(){
 
-}
-
-function saveLead(){
+let totals = calc();
 
 let item = {
-id:"LD-"+Date.now(),
+id:"DOC-"+Date.now(),
 company:document.getElementById("company").value,
 person:document.getElementById("person").value,
-phone:document.getElementById("phone").value,
-source:document.getElementById("source").value,
+contact:document.getElementById("contact").value,
+city:document.getElementById("city").value,
 service:document.getElementById("service").value,
-stage:document.getElementById("stage").value,
-amount:Number(document.getElementById("amount").value || 0),
+qty:Number(document.getElementById("qty").value || 0),
+rate:Number(document.getElementById("rate").value || 0),
+gstType:document.getElementById("gstType").value,
+advance:Number(document.getElementById("advance").value || 0),
+status:document.getElementById("status").value,
+base:totals.base,
+gst:totals.gst,
+final:totals.final,
+balance:totals.balance,
 created:new Date().toLocaleString("en-IN")
 };
 
-leads.unshift(item);
+docs.unshift(item);
 
-save();
+localStorage.setItem("mh22_docs", JSON.stringify(docs));
 
 render();
 
-alert("Lead Saved");
+alert("Document Saved");
 
 }
 
 function render(){
 
-let total = leads.length;
-let won = leads.filter(x=>x.stage==="Won").length;
-let lost = leads.filter(x=>x.stage==="Lost").length;
-let follow = leads.filter(x=>x.stage==="Follow Up").length;
-
-let revenue = leads.filter(x=>x.stage==="Won").reduce((a,x)=>a+x.amount,0);
-
-let conversion = total ? Math.round((won/total)*100) : 0;
-
-document.getElementById("stats").innerHTML = `
-<div class="stat"><h3>Total Leads</h3><h1>${total}</h1></div>
-<div class="stat"><h3>Won Deals</h3><h1>${won}</h1></div>
-<div class="stat"><h3>Follow Ups</h3><h1>${follow}</h1></div>
-<div class="stat"><h3>Lost Leads</h3><h1>${lost}</h1></div>
-<div class="stat"><h3>Sales Revenue</h3><h1>${money(revenue)}</h1></div>
-<div class="stat"><h3>Conversion %</h3><h1>${conversion}%</h1></div>
-`;
-
 let html = `
 <tr>
+<th>ID</th>
 <th>Company</th>
-<th>Person</th>
-<th>Source</th>
 <th>Service</th>
-<th>Stage</th>
-<th>Amount</th>
-<th>Time</th>
+<th>Final</th>
+<th>Status</th>
+<th>Preview</th>
 </tr>`;
 
-leads.forEach(l=>{
+docs.forEach(d=>{
 
 html += `
 <tr>
-<td>${l.company}</td>
-<td>${l.person}<br>${l.phone}</td>
-<td>${l.source}</td>
-<td>${l.service}</td>
-<td>${badge(l.stage)}</td>
-<td>${money(l.amount)}</td>
-<td>${l.created}</td>
+<td>${d.id}</td>
+<td>${d.company}</td>
+<td>${d.service}</td>
+<td>${money(d.final)}</td>
+<td><span class="badge orange">${d.status}</span></td>
+<td><button onclick="previewDoc('${d.id}')">View</button></td>
 </tr>`;
 
 });
 
-document.getElementById("leadTable").innerHTML = html;
+document.getElementById("docTable").innerHTML = html;
 
-document.getElementById("summary").innerHTML = `
-<h2>Sales Funnel Summary</h2>
+}
 
-<p><b>Total Leads:</b> ${total}</p>
-<p><b>Won Deals:</b> ${won}</p>
-<p><b>Lost Leads:</b> ${lost}</p>
-<p><b>Follow Ups:</b> ${follow}</p>
+function previewDoc(id){
 
-<div class="progress">
-<div class="bar" style="width:${conversion}%"></div>
-</div>
+let d = docs.find(x=>x.id===id);
 
-<p><b>Conversion Rate:</b> ${conversion}%</p>
+document.getElementById("preview").innerText = `
+PRAJAPATI ADVERTISING
 
-<p>
-Track all Meta Ads, IndiaMART, JustDial and TradeIndia leads from one place.
-</p>
+Document ID: ${d.id}
+Date: ${d.created}
+
+Company: ${d.company}
+Person: ${d.person}
+Contact: ${d.contact}
+City: ${d.city}
+
+Service: ${d.service}
+
+Quantity: ${d.qty}
+Rate: ${money(d.rate)}
+
+Base Amount: ${money(d.base)}
+GST: ${money(d.gst)}
+Final Amount: ${money(d.final)}
+
+Advance: ${money(d.advance)}
+Balance: ${money(d.balance)}
+
+Status: ${d.status}
+
+Thank you for choosing Prajapati Advertising.
 `;
 
 }
