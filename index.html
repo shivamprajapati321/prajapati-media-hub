@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>MediaHub Phase 8</title>
+<title>MediaHub Phase 9</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
@@ -18,7 +18,6 @@ body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .stat{background:#17181f;border:1px solid #333;border-radius:15px;padding:16px}
 .stat h3{color:#aaa;font-size:12px;margin:0 0 8px}.stat h1{color:#ff6b00;margin:0}
 input,select,textarea{width:100%;padding:12px;border-radius:10px;background:#090909;color:#fff;border:1px solid #333;margin-top:6px}
-textarea{min-height:80px}
 .btn{padding:12px 16px;background:#ff6b00;border:none;border-radius:10px;font-weight:900;cursor:pointer}
 .btn2{padding:8px 12px;background:#1f2937;border:1px solid #333;color:#fff;border-radius:8px;cursor:pointer}
 .btnG{padding:8px 12px;background:#22c55e;border:none;color:#04120a;border-radius:8px;font-weight:900;cursor:pointer}
@@ -41,47 +40,45 @@ th,td{padding:10px;border-bottom:1px solid #333;text-align:left;vertical-align:t
 <button onclick="ordersPage()">Orders</button>
 <button onclick="designPage()">Design Approval</button>
 <button onclick="printingPage()">Printing ERP</button>
-<button onclick="reportsPage()">Reports</button>
+<button onclick="stitchingPage()">Stitching ERP</button>
+<button onclick="stitchingReports()">Stitching Reports</button>
 </div>
 </div>
 <div class="content" id="content"></div>
 </div>
 
 <script>
-let orders = JSON.parse(localStorage.getItem("mh_phase8_orders") || "[]");
-let printJobs = JSON.parse(localStorage.getItem("mh_phase8_prints") || "[]");
+let orders = JSON.parse(localStorage.getItem("mh_phase9_orders") || "[]");
+let printJobs = JSON.parse(localStorage.getItem("mh_phase9_prints") || "[]");
+let stitchEntries = JSON.parse(localStorage.getItem("mh_phase9_stitches") || "[]");
 let locations = [];
 
 function saveDB(){
-  localStorage.setItem("mh_phase8_orders", JSON.stringify(orders));
-  localStorage.setItem("mh_phase8_prints", JSON.stringify(printJobs));
+  localStorage.setItem("mh_phase9_orders", JSON.stringify(orders));
+  localStorage.setItem("mh_phase9_prints", JSON.stringify(printJobs));
+  localStorage.setItem("mh_phase9_stitches", JSON.stringify(stitchEntries));
 }
 
 function money(n){return "₹"+Number(n||0).toLocaleString("en-IN");}
-
 function badge(s){
-  let cls = s==="Completed" || s==="Ready For Stitching" || s==="Approved" ? "ok" : s==="Running" ? "blue" : "";
+  let cls = s==="Completed" || s==="Ready For Stitching" || s==="Ready For Dispatch" || s==="Approved" ? "ok" : s==="Running" ? "blue" : "";
   return "<span class='badge "+cls+"'>"+s+"</span>";
 }
 
 function dashboard(){
-  let totalOrders=orders.length;
-  let readyPrint=orders.filter(o=>o.status==="Ready For Printing").length;
-  let running=printJobs.filter(p=>p.status==="Running").length;
-  let completed=printJobs.filter(p=>p.status==="Completed").length;
-  let printed=printJobs.reduce((a,p)=>a+Number(p.printed||0),0);
+  let readyStitch=orders.filter(o=>o.status==="Ready For Stitching").length;
+  let stitched=stitchEntries.reduce((a,e)=>a+Number(e.qty||0),0);
+  let ot=stitchEntries.reduce((a,e)=>a+Number(e.ot||0),0);
+  let cash=stitchEntries.filter(e=>e.paymentType==="Cash").reduce((a,e)=>a+Number(e.amount||0),0);
 
   content.innerHTML = `
-  <div class='card'>
-    <h1>Phase 8 Dashboard</h1>
-    <p>Printing Production ERP</p>
-  </div>
+  <div class='card'><h1>Phase 9 Dashboard</h1><p>Stitching Management ERP</p></div>
   <div class='stats'>
-    <div class='stat'><h3>Total Orders</h3><h1>${totalOrders}</h1></div>
-    <div class='stat'><h3>Ready For Printing</h3><h1>${readyPrint}</h1></div>
-    <div class='stat'><h3>Printing Running</h3><h1>${running}</h1></div>
-    <div class='stat'><h3>Printing Completed</h3><h1>${completed}</h1></div>
-    <div class='stat'><h3>Total Printed Qty</h3><h1>${printed}</h1></div>
+    <div class='stat'><h3>Total Orders</h3><h1>${orders.length}</h1></div>
+    <div class='stat'><h3>Ready For Stitching</h3><h1>${readyStitch}</h1></div>
+    <div class='stat'><h3>Total Stitched Qty</h3><h1>${stitched}</h1></div>
+    <div class='stat'><h3>Total OT</h3><h1>${money(ot)}</h1></div>
+    <div class='stat'><h3>Cash Payment</h3><h1>${money(cash)}</h1></div>
   </div>`;
 }
 
@@ -165,10 +162,7 @@ function saveOrder(){
 function ordersPage(){
   let rows="";
   orders.forEach(o=>{
-    rows+=`<tr>
-      <td>${o.id}</td><td>${o.company}</td><td>${o.qty}</td><td>${money(o.final)}</td>
-      <td>${badge(o.status)}</td><td>${o.clientApproval}</td>
-    </tr>`;
+    rows+=`<tr><td>${o.id}</td><td>${o.company}</td><td>${o.qty}</td><td>${money(o.final)}</td><td>${badge(o.status)}</td><td>${o.clientApproval}</td></tr>`;
   });
   content.innerHTML=`<div class='card'><h1>Orders</h1><table><tr><th>Order</th><th>Company</th><th>Qty</th><th>Amount</th><th>Status</th><th>Client Approval</th></tr>${rows}</table></div>`;
 }
@@ -176,16 +170,10 @@ function ordersPage(){
 function designPage(){
   let rows="";
   orders.forEach(o=>{
-    rows+=`<tr>
-      <td>${o.id}</td><td>${o.company}</td>
-      <td>${o.locations.map(x=>x.city).join(", ")}</td>
-      <td>${o.locations.map(x=>x.designType).join(", ")}</td>
-      <td>${badge(o.clientApproval)}</td>
-      <td><button class='btn2' onclick="approveClient('${o.id}')">Approve</button>
-      <button class='btn2' onclick="rejectClient('${o.id}')">Reject</button></td>
-    </tr>`;
+    rows+=`<tr><td>${o.id}</td><td>${o.company}</td><td>${o.locations.map(x=>x.city).join(", ")}</td><td>${badge(o.clientApproval)}</td>
+    <td><button class='btn2' onclick="approveClient('${o.id}')">Approve</button><button class='btn2' onclick="rejectClient('${o.id}')">Reject</button></td></tr>`;
   });
-  content.innerHTML=`<div class='card'><h1>Design + Client Approval</h1><table><tr><th>Order</th><th>Company</th><th>Locations</th><th>Design</th><th>Approval</th><th>Action</th></tr>${rows}</table></div>`;
+  content.innerHTML=`<div class='card'><h1>Design + Client Approval</h1><table><tr><th>Order</th><th>Company</th><th>Locations</th><th>Approval</th><th>Action</th></tr>${rows}</table></div>`;
 }
 
 function approveClient(id){
@@ -213,8 +201,7 @@ function printingPage(){
     let pending=Math.max(0,Number(p.totalQty)-Number(p.printed||0));
     let pct=p.totalQty?Math.round((Number(p.printed||0)/Number(p.totalQty))*100):0;
     rows+=`<tr>
-      <td>${p.id}</td>
-      <td>${p.orderId}<br>${p.company}</td>
+      <td>${p.id}</td><td>${p.orderId}<br>${p.company}</td>
       <td><input value="${p.operator}" onchange="setPrint('${p.id}','operator',this.value)" placeholder="Operator"></td>
       <td><input value="${p.machine}" onchange="setPrint('${p.id}','machine',this.value)" placeholder="Machine"></td>
       <td>${p.totalQty}</td>
@@ -226,7 +213,7 @@ function printingPage(){
       <td><button class='btnG' onclick="completePrint('${p.id}')">Complete</button></td>
     </tr>`;
   });
-  content.innerHTML=`<div class='card'><h1>Printing Production ERP</h1><p>Operator, machine, printed qty, pending qty, ink and roll tracking.</p><table><tr><th>Print ID</th><th>Order</th><th>Operator</th><th>Machine</th><th>Total</th><th>Printed</th><th>Pending</th><th>Ink</th><th>Roll</th><th>Status</th><th>Action</th></tr>${rows}</table></div>`;
+  content.innerHTML=`<div class='card'><h1>Printing Production ERP</h1><table><tr><th>Print ID</th><th>Order</th><th>Operator</th><th>Machine</th><th>Total</th><th>Printed</th><th>Pending</th><th>Ink</th><th>Roll</th><th>Status</th><th>Action</th></tr>${rows}</table></div>`;
 }
 
 function setPrint(id,key,value){
@@ -254,12 +241,61 @@ function completePrint(id){
   printingPage();
 }
 
-function reportsPage(){
+function stitchedQty(orderId){
+  return stitchEntries.filter(e=>e.orderId===orderId).reduce((a,e)=>a+Number(e.qty||0),0);
+}
+
+function stitchingPage(){
+  let ready=orders.filter(o=>o.status==="Ready For Stitching" || o.status==="Stitching Running");
   let rows="";
-  printJobs.forEach(p=>{
-    rows+=`<tr><td>${p.id}</td><td>${p.company}</td><td>${p.operator}</td><td>${p.machine}</td><td>${p.printed}/${p.totalQty}</td><td>${p.ink}</td><td>${p.roll}</td><td>${badge(p.status)}</td></tr>`;
+  ready.forEach(o=>{
+    let done=stitchedQty(o.id);
+    let pending=Math.max(0,o.qty-done);
+    let pct=o.qty?Math.round((done/o.qty)*100):0;
+    rows+=`<tr>
+      <td>${o.id}<br>${o.company}</td>
+      <td>${o.qty}</td>
+      <td>${done}</td>
+      <td>${pending}</td>
+      <td><input id="worker_${o.id}" placeholder="Worker name"></td>
+      <td><input id="sqty_${o.id}" type="number" placeholder="Qty"></td>
+      <td><select id="ptype_${o.id}"><option>Monthly</option><option>Cash</option></select></td>
+      <td><input id="amt_${o.id}" type="number" placeholder="Amount"></td>
+      <td><input id="ot_${o.id}" type="number" placeholder="OT"></td>
+      <td><div class='progress'><div class='bar' style='width:${pct}%'></div></div>${pct}%<br>${badge(o.status)}</td>
+      <td><button class='btnG' onclick="addStitch('${o.id}')">Add</button><br><br><button class='btnG' onclick="completeStitch('${o.id}')">Complete</button></td>
+    </tr>`;
   });
-  content.innerHTML=`<div class='card'><h1>Printing Reports</h1><table><tr><th>Print ID</th><th>Company</th><th>Operator</th><th>Machine</th><th>Qty</th><th>Ink</th><th>Roll</th><th>Status</th></tr>${rows}</table></div>`;
+  content.innerHTML=`<div class='card'><h1>Stitching Management ERP</h1><p>Worker-wise qty, OT, cash/monthly payment and pending tracking.</p><table><tr><th>Order</th><th>Total</th><th>Done</th><th>Pending</th><th>Worker</th><th>Qty</th><th>Payment</th><th>Amount</th><th>OT</th><th>Status</th><th>Action</th></tr>${rows}</table></div>`;
+}
+
+function addStitch(orderId){
+  let worker=document.getElementById("worker_"+orderId).value;
+  let qty=Number(document.getElementById("sqty_"+orderId).value||0);
+  let paymentType=document.getElementById("ptype_"+orderId).value;
+  let amount=Number(document.getElementById("amt_"+orderId).value||0);
+  let ot=Number(document.getElementById("ot_"+orderId).value||0);
+  if(!worker||!qty){alert("Enter worker and qty");return;}
+  stitchEntries.unshift({id:"ST-"+Date.now(),orderId,worker,qty,paymentType,amount,ot,date:new Date().toLocaleDateString("en-IN")});
+  let o=orders.find(x=>x.id===orderId);
+  o.status="Stitching Running";
+  saveDB();
+  stitchingPage();
+}
+
+function completeStitch(orderId){
+  let o=orders.find(x=>x.id===orderId);
+  o.status="Ready For Dispatch";
+  saveDB();
+  stitchingPage();
+}
+
+function stitchingReports(){
+  let rows="";
+  stitchEntries.forEach(e=>{
+    rows+=`<tr><td>${e.date}</td><td>${e.orderId}</td><td>${e.worker}</td><td>${e.qty}</td><td>${e.paymentType}</td><td>${money(e.amount)}</td><td>${money(e.ot)}</td></tr>`;
+  });
+  content.innerHTML=`<div class='card'><h1>Stitching Reports</h1><table><tr><th>Date</th><th>Order</th><th>Worker</th><th>Qty</th><th>Payment</th><th>Amount</th><th>OT</th></tr>${rows}</table></div>`;
 }
 
 dashboard();
