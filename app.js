@@ -1,1 +1,91 @@
-const C=window.PMH_CONFIG||{PASSWORD:"9922138138"};const app=document.getElementById("app");let S={user:null,page:"dash",orders:JSON.parse(localStorage.getItem("mh5_orders")||"[]"),tasks:JSON.parse(localStorage.getItem("mh5_tasks")||"[]")};const roles=["Admin","Sales","Design","Printing","Stitching","Dispatch","Execution","Accounts"];function save(){localStorage.setItem("mh5_orders",JSON.stringify(S.orders));localStorage.setItem("mh5_tasks",JSON.stringify(S.tasks))}function money(n){return"₹"+Number(n||0).toLocaleString("en-IN")}function badge(x){return'<span class="badge '+(x=="Done"||x=="Approved"?"ok":"")+'">'+x+"</span>"}function loginUI(){app.innerHTML='<div class="login"><div class="box"><div class="logo">MEDIA<span>HUB</span></div><p>Phase 5A Role ERP Shell</p><select id="role">'+roles.map(r=>'<option>'+r+'</option>').join("")+'</select><input id="pass" type="password" placeholder="Password"><button onclick="login()">Login</button><p id="err" style="color:#ef4444"></p></div></div>'}function login(){if(document.getElementById("pass").value!==C.PASSWORD){err.innerText="Wrong password";return}S.user={role:role.value};render()}function logout(){S.user=null;loginUI()}function can(m){return S.user.role=="Admin"||m=="dash"||m=="reports"||m.toLowerCase()==S.user.role.toLowerCase()}function nav(id,t,m){return can(m||id)?'<button onclick="go(\\''+id+'\\')">'+t+"</button>":""}function shell(c){app.innerHTML='<div class="shell"><div class="side"><div class="brand">MEDIA<span>HUB</span></div><div class="role">👤 '+S.user.role+'</div><div class="nav">'+nav("dash","📊 Dashboard","dash")+nav("orders","📋 Orders","Sales")+nav("Design","🎨 Design","Design")+nav("Printing","🖨 Printing","Printing")+nav("Stitching","🪡 Stitching","Stitching")+nav("Dispatch","🚚 Dispatch","Dispatch")+nav("Execution","📍 Execution","Execution")+nav("Accounts","💳 Accounts","Accounts")+nav("reports","📄 Reports","reports")+'<button onclick="logout()">Logout</button></div></div><div class="main">'+c+"</div></div>"}function go(p){S.page=p;render()}function top(t){return'<div class="top"><h1>'+t+'</h1><button onclick="backup()">Backup</button></div>'}function k(t,v){return'<div class="card"><h3>'+t+'</h3><h1>'+v+"</h1></div>"}function table(h,r){return'<table><tr>'+h.map(x=>"<th>"+x+"</th>").join("")+"</tr>"+r.join("")+"</table>"}function render(){if(S.page=="dash")dash();else if(S.page=="orders")orders();else if(S.page=="reports")reports();else dept(S.page)}function dash(){let total=S.orders.reduce((a,b)=>a+(+b.amount||0),0);shell(top("Admin Dashboard")+'<div class="cards">'+k("Orders",S.orders.length)+k("Revenue",money(total))+k("Tasks",S.tasks.length)+k("Pending",S.tasks.filter(t=>t.status!="Done").length)+'</div><div class="section"><h2>Phase 5A Ready</h2><p>Role login, permission based modules, order-to-department workflow and backup ready.</p></div>')}function orders(){shell(top("Orders")+'<div class="section"><h2>Create Order</h2><div class="grid"><input id="company" placeholder="Company"><select id="media"><option>Auto Rickshaw Hood Branding</option><option>Back Panel</option><option>No Parking Board</option></select><input id="city" placeholder="City"><input id="amount" type="number" placeholder="Amount"><textarea id="notes" class="full" placeholder="Notes"></textarea></div><br><button onclick="addOrder()">Create Order</button></div>'+ordersTable())}function addOrder(){S.orders.unshift({id:"ORD-"+Date.now(),company:company.value,media:media.value,city:city.value,amount:+amount.value||0,notes:notes.value,status:"Admin Pending"});save();orders()}function approve(id){let o=S.orders.find(x=>x.id==id);o.status="Approved";S.tasks.push({id:"TASK-"+Date.now(),orderId:id,dept:"Design",status:"Pending"});save();orders()}function ordersTable(){return'<div class="section"><h2>Orders List</h2>'+table(["Order","Company","Media","City","Amount","Status","Action"],S.orders.map(o=>'<tr><td>'+o.id+'</td><td>'+o.company+'</td><td>'+o.media+'</td><td>'+o.city+'</td><td>'+money(o.amount)+'</td><td>'+badge(o.status)+'</td><td><button onclick="approve(\\''+o.id+'\\')">Approve</button></td></tr>'))+"</div>"}function dept(d){let next={Design:"Printing",Printing:"Stitching",Stitching:"Dispatch",Dispatch:"Execution",Execution:"Accounts",Accounts:null}[d];let rows=S.tasks.filter(t=>t.dept==d).map(t=>'<tr><td>'+t.id+'</td><td>'+t.orderId+'</td><td>'+badge(t.status)+'</td><td><button onclick="doneTask(\\''+t.id+'\\',\\''+(next||"")+'\\')">Done</button></td></tr>');shell(top(d+" Module")+'<div class="section">'+table(["Task","Order","Status","Action"],rows)+"</div>")}function doneTask(id,next){let t=S.tasks.find(x=>x.id==id);t.status="Done";if(next)S.tasks.push({id:"TASK-"+Date.now(),orderId:t.orderId,dept:next,status:"Pending"});save();render()}function reports(){shell(top("Reports")+ordersTable())}function backup(){let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify({orders:S.orders,tasks:S.tasks},null,2)]));a.download="mediahub-phase5A-backup.json";a.click()}loginUI();
+
+const app = document.getElementById('app');
+
+function loginScreen(){
+app.innerHTML = `
+<div class="login">
+<div class="box">
+
+<div class="logo">
+MEDIA<span>HUB</span>
+</div>
+
+<select id="role">
+<option>Admin</option>
+<option>Sales</option>
+<option>Printing</option>
+<option>Execution</option>
+</select>
+
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+<p id="error" style="color:red;"></p>
+
+</div>
+</div>
+`;
+}
+
+function login(){
+const pass = document.getElementById('password').value;
+
+if(pass !== window.PMH_CONFIG.PASSWORD){
+document.getElementById('error').innerText = 'Wrong Password';
+return;
+}
+
+dashboard();
+}
+
+function dashboard(){
+app.innerHTML = `
+<div class="shell">
+
+<div class="sidebar">
+
+<div class="brand">
+MEDIA<span>HUB</span>
+</div>
+
+<div class="nav">
+<button>Dashboard</button>
+<button>Orders</button>
+<button>Design</button>
+<button>Printing</button>
+<button>Dispatch</button>
+<button>Execution</button>
+<button>Accounts</button>
+</div>
+
+</div>
+
+<div class="main">
+
+<div class="card">
+<h1>Phase 5A Working</h1>
+<p>Role ERP Shell Loaded Successfully</p>
+</div>
+
+<div class="card">
+<h2>Modules</h2>
+
+<ul>
+<li>Orders</li>
+<li>Design</li>
+<li>Printing</li>
+<li>Dispatch</li>
+<li>Execution</li>
+<li>Accounts</li>
+</ul>
+
+</div>
+
+</div>
+
+</div>
+`;
+}
+
+loginScreen();
