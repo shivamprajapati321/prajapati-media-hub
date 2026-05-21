@@ -1,304 +1,124 @@
+
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>MediaHub Phase 9</title>
+<title>Phase 10 Dispatch ERP</title>
 <style>
-*{box-sizing:border-box}
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
-.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
-.sidebar{background:#111;padding:20px;border-right:1px solid #333}
-.logo{font-size:42px;font-weight:900;margin-bottom:25px}
-.logo span{color:#ff6b00}
-.menu button{width:100%;padding:14px;margin-bottom:10px;border-radius:12px;border:1px solid #333;background:#1a1b22;color:#fff;font-weight:700;cursor:pointer;text-align:left}
-.content{padding:24px}
-.card{background:#111;border:1px solid #333;border-radius:18px;padding:20px;margin-bottom:18px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
-.stat{background:#17181f;border:1px solid #333;border-radius:15px;padding:16px}
-.stat h3{color:#aaa;font-size:12px;margin:0 0 8px}.stat h1{color:#ff6b00;margin:0}
-input,select,textarea{width:100%;padding:12px;border-radius:10px;background:#090909;color:#fff;border:1px solid #333;margin-top:6px}
-.btn{padding:12px 16px;background:#ff6b00;border:none;border-radius:10px;font-weight:900;cursor:pointer}
-.btn2{padding:8px 12px;background:#1f2937;border:1px solid #333;color:#fff;border-radius:8px;cursor:pointer}
-.btnG{padding:8px 12px;background:#22c55e;border:none;color:#04120a;border-radius:8px;font-weight:900;cursor:pointer}
+.wrap{padding:20px}
+.card{background:#111;border:1px solid #333;border-radius:16px;padding:20px;margin-bottom:20px}
 table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #333;text-align:left;vertical-align:top}
-.badge{padding:5px 10px;border-radius:999px;background:#ff6b0020;color:#ff6b00;font-size:11px;font-weight:900}
-.ok{background:#22c55e20;color:#22c55e}
-.blue{background:#38bdf820;color:#38bdf8}
-.progress{height:9px;background:#242424;border-radius:999px;overflow:hidden}
-.bar{height:100%;background:#ff6b00}
+th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
+input,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px}
+button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700}
 </style>
 </head>
 <body>
-<div class="layout">
-<div class="sidebar">
-<div class="logo">MEDIA<span>HUB</span></div>
-<div class="menu">
-<button onclick="dashboard()">Dashboard</button>
-<button onclick="createOrder()">Create Order</button>
-<button onclick="ordersPage()">Orders</button>
-<button onclick="designPage()">Design Approval</button>
-<button onclick="printingPage()">Printing ERP</button>
-<button onclick="stitchingPage()">Stitching ERP</button>
-<button onclick="stitchingReports()">Stitching Reports</button>
+<div class="wrap">
+<div class="card">
+<h1>Phase 10 - Dispatch ERP</h1>
+<p>Dispatch + Vendor + Bundle Tracking</p>
 </div>
+
+<div class="card">
+<h2>Create Dispatch</h2>
+
+<table>
+<tr>
+<td><input id="orderId" placeholder="Order ID"></td>
+<td><input id="team" placeholder="Team / Party"></td>
+<td><input id="bundle" placeholder="Bundle Count"></td>
+<td><input id="qty" placeholder="Total PCS"></td>
+</tr>
+
+<tr>
+<td><input id="vendor" placeholder="Transport Vendor"></td>
+<td><input id="lr" placeholder="LR Number"></td>
+<td>
+<select id="type">
+<option>Team Dispatch</option>
+<option>Direct Party</option>
+</select>
+</td>
+<td><button onclick="addDispatch()">Save Dispatch</button></td>
+</tr>
+</table>
 </div>
-<div class="content" id="content"></div>
+
+<div class="card">
+<h2>Dispatch Reports</h2>
+<table id="tbl">
+<tr>
+<th>Order</th>
+<th>Dispatch Type</th>
+<th>Team/Party</th>
+<th>Bundle</th>
+<th>PCS</th>
+<th>Vendor</th>
+<th>LR</th>
+<th>Status</th>
+</tr>
+</table>
+</div>
 </div>
 
 <script>
-let orders = JSON.parse(localStorage.getItem("mh_phase9_orders") || "[]");
-let printJobs = JSON.parse(localStorage.getItem("mh_phase9_prints") || "[]");
-let stitchEntries = JSON.parse(localStorage.getItem("mh_phase9_stitches") || "[]");
-let locations = [];
+let dispatches = JSON.parse(localStorage.getItem("dispatches") || "[]");
 
-function saveDB(){
-  localStorage.setItem("mh_phase9_orders", JSON.stringify(orders));
-  localStorage.setItem("mh_phase9_prints", JSON.stringify(printJobs));
-  localStorage.setItem("mh_phase9_stitches", JSON.stringify(stitchEntries));
+function render(){
+let html = `
+<tr>
+<th>Order</th>
+<th>Dispatch Type</th>
+<th>Team/Party</th>
+<th>Bundle</th>
+<th>PCS</th>
+<th>Vendor</th>
+<th>LR</th>
+<th>Status</th>
+</tr>
+`;
+
+dispatches.forEach(d=>{
+html += `
+<tr>
+<td>${d.orderId}</td>
+<td>${d.type}</td>
+<td>${d.team}</td>
+<td>${d.bundle}</td>
+<td>${d.qty}</td>
+<td>${d.vendor}</td>
+<td>${d.lr}</td>
+<td>Ready For Execution</td>
+</tr>
+`;
+});
+
+document.getElementById("tbl").innerHTML = html;
 }
 
-function money(n){return "₹"+Number(n||0).toLocaleString("en-IN");}
-function badge(s){
-  let cls = s==="Completed" || s==="Ready For Stitching" || s==="Ready For Dispatch" || s==="Approved" ? "ok" : s==="Running" ? "blue" : "";
-  return "<span class='badge "+cls+"'>"+s+"</span>";
+function addDispatch(){
+
+dispatches.unshift({
+orderId : document.getElementById("orderId").value,
+team : document.getElementById("team").value,
+bundle : document.getElementById("bundle").value,
+qty : document.getElementById("qty").value,
+vendor : document.getElementById("vendor").value,
+lr : document.getElementById("lr").value,
+type : document.getElementById("type").value
+});
+
+localStorage.setItem("dispatches", JSON.stringify(dispatches));
+
+render();
+
+alert("Dispatch Saved");
+
 }
 
-function dashboard(){
-  let readyStitch=orders.filter(o=>o.status==="Ready For Stitching").length;
-  let stitched=stitchEntries.reduce((a,e)=>a+Number(e.qty||0),0);
-  let ot=stitchEntries.reduce((a,e)=>a+Number(e.ot||0),0);
-  let cash=stitchEntries.filter(e=>e.paymentType==="Cash").reduce((a,e)=>a+Number(e.amount||0),0);
-
-  content.innerHTML = `
-  <div class='card'><h1>Phase 9 Dashboard</h1><p>Stitching Management ERP</p></div>
-  <div class='stats'>
-    <div class='stat'><h3>Total Orders</h3><h1>${orders.length}</h1></div>
-    <div class='stat'><h3>Ready For Stitching</h3><h1>${readyStitch}</h1></div>
-    <div class='stat'><h3>Total Stitched Qty</h3><h1>${stitched}</h1></div>
-    <div class='stat'><h3>Total OT</h3><h1>${money(ot)}</h1></div>
-    <div class='stat'><h3>Cash Payment</h3><h1>${money(cash)}</h1></div>
-  </div>`;
-}
-
-function createOrder(){
-  locations=[];
-  content.innerHTML=`
-  <div class='card'>
-    <h1>Create Real Order</h1>
-    <div class='grid'>
-      <div><label>Company</label><input id='company'></div>
-      <div><label>Person</label><input id='person'></div>
-      <div><label>Contact</label><input id='contact'></div>
-      <div><label>Rate Per PCS</label><input type='number' id='rate' oninput='updateTotals()'></div>
-    </div>
-    <br>
-    <h2>Multi City Split</h2>
-    <div class='grid'>
-      <div><label>Location</label><input id='city'></div>
-      <div><label>Quantity</label><input type='number' id='qty'></div>
-      <div><label>Design Type</label><select id='designType'><option>Same Design</option><option>Different Design</option></select></div>
-      <div><label>Design Upload</label><input type='file' id='designUpload'></div>
-    </div>
-    <br>
-    <button class='btn2' onclick='addLocation()'>Add Location</button>
-    <br><br><div id='locationTable'></div>
-    <br>
-    <div class='stats'>
-      <div class='stat'><h3>Total Qty</h3><h1 id='totalQty'>0</h1></div>
-      <div class='stat'><h3>Final Amount</h3><h1 id='finalAmount'>₹0</h1></div>
-    </div>
-    <button class='btn' onclick='saveOrder()'>Create Order</button>
-  </div>`;
-}
-
-function addLocation(){
-  let city=document.getElementById("city").value;
-  let qty=Number(document.getElementById("qty").value||0);
-  let designType=document.getElementById("designType").value;
-  let file=document.getElementById("designUpload").files[0];
-  if(!city||!qty){alert("Enter location and quantity");return;}
-  locations.push({city,qty,designType,designFile:file?file.name:"Not Uploaded"});
-  renderLocations();
-}
-
-function renderLocations(){
-  let html="<table><tr><th>City</th><th>Qty</th><th>Design</th><th>File</th></tr>";
-  locations.forEach(l=>{html+=`<tr><td>${l.city}</td><td>${l.qty}</td><td>${l.designType}</td><td>${l.designFile}</td></tr>`});
-  html+="</table>";
-  document.getElementById("locationTable").innerHTML=html;
-  updateTotals();
-}
-
-function updateTotals(){
-  let qty=locations.reduce((a,l)=>a+Number(l.qty),0);
-  let rate=Number(document.getElementById("rate")?.value||0);
-  let total=qty*rate;
-  if(document.getElementById("totalQty")) document.getElementById("totalQty").innerText=qty;
-  if(document.getElementById("finalAmount")) document.getElementById("finalAmount").innerText=money(total);
-}
-
-function saveOrder(){
-  let qty=locations.reduce((a,l)=>a+Number(l.qty),0);
-  let rate=Number(document.getElementById("rate").value||0);
-  let total=qty*rate;
-  let order={
-    id:"ORD-"+Date.now(),
-    company:document.getElementById("company").value,
-    person:document.getElementById("person").value,
-    contact:document.getElementById("contact").value,
-    qty, rate, final:total,
-    status:"Pending Design",
-    clientApproval:"Pending",
-    locations
-  };
-  orders.unshift(order);
-  saveDB();
-  alert("Order Created");
-  ordersPage();
-}
-
-function ordersPage(){
-  let rows="";
-  orders.forEach(o=>{
-    rows+=`<tr><td>${o.id}</td><td>${o.company}</td><td>${o.qty}</td><td>${money(o.final)}</td><td>${badge(o.status)}</td><td>${o.clientApproval}</td></tr>`;
-  });
-  content.innerHTML=`<div class='card'><h1>Orders</h1><table><tr><th>Order</th><th>Company</th><th>Qty</th><th>Amount</th><th>Status</th><th>Client Approval</th></tr>${rows}</table></div>`;
-}
-
-function designPage(){
-  let rows="";
-  orders.forEach(o=>{
-    rows+=`<tr><td>${o.id}</td><td>${o.company}</td><td>${o.locations.map(x=>x.city).join(", ")}</td><td>${badge(o.clientApproval)}</td>
-    <td><button class='btn2' onclick="approveClient('${o.id}')">Approve</button><button class='btn2' onclick="rejectClient('${o.id}')">Reject</button></td></tr>`;
-  });
-  content.innerHTML=`<div class='card'><h1>Design + Client Approval</h1><table><tr><th>Order</th><th>Company</th><th>Locations</th><th>Approval</th><th>Action</th></tr>${rows}</table></div>`;
-}
-
-function approveClient(id){
-  let o=orders.find(x=>x.id===id);
-  o.clientApproval="Approved";
-  o.status="Ready For Printing";
-  if(!printJobs.find(p=>p.orderId===id)){
-    printJobs.unshift({id:"PRT-"+Date.now(),orderId:o.id,company:o.company,totalQty:o.qty,operator:"",machine:"",printed:0,ink:"",roll:"",status:"Pending"});
-  }
-  saveDB();
-  designPage();
-}
-
-function rejectClient(id){
-  let o=orders.find(x=>x.id===id);
-  o.clientApproval="Revision Required";
-  o.status="Design Revision";
-  saveDB();
-  designPage();
-}
-
-function printingPage(){
-  let rows="";
-  printJobs.forEach(p=>{
-    let pending=Math.max(0,Number(p.totalQty)-Number(p.printed||0));
-    let pct=p.totalQty?Math.round((Number(p.printed||0)/Number(p.totalQty))*100):0;
-    rows+=`<tr>
-      <td>${p.id}</td><td>${p.orderId}<br>${p.company}</td>
-      <td><input value="${p.operator}" onchange="setPrint('${p.id}','operator',this.value)" placeholder="Operator"></td>
-      <td><input value="${p.machine}" onchange="setPrint('${p.id}','machine',this.value)" placeholder="Machine"></td>
-      <td>${p.totalQty}</td>
-      <td><input type="number" value="${p.printed}" onchange="setPrinted('${p.id}',this.value)"></td>
-      <td>${pending}</td>
-      <td><input value="${p.ink}" onchange="setPrint('${p.id}','ink',this.value)" placeholder="Ink used"></td>
-      <td><input value="${p.roll}" onchange="setPrint('${p.id}','roll',this.value)" placeholder="Roll used"></td>
-      <td><div class='progress'><div class='bar' style='width:${pct}%'></div></div>${pct}%<br>${badge(p.status)}</td>
-      <td><button class='btnG' onclick="completePrint('${p.id}')">Complete</button></td>
-    </tr>`;
-  });
-  content.innerHTML=`<div class='card'><h1>Printing Production ERP</h1><table><tr><th>Print ID</th><th>Order</th><th>Operator</th><th>Machine</th><th>Total</th><th>Printed</th><th>Pending</th><th>Ink</th><th>Roll</th><th>Status</th><th>Action</th></tr>${rows}</table></div>`;
-}
-
-function setPrint(id,key,value){
-  let p=printJobs.find(x=>x.id===id);
-  p[key]=value;
-  if(p.status==="Pending")p.status="Running";
-  saveDB();
-}
-
-function setPrinted(id,value){
-  let p=printJobs.find(x=>x.id===id);
-  p.printed=Number(value||0);
-  p.status=p.printed>=p.totalQty?"Completed":"Running";
-  saveDB();
-  printingPage();
-}
-
-function completePrint(id){
-  let p=printJobs.find(x=>x.id===id);
-  p.printed=p.totalQty;
-  p.status="Completed";
-  let o=orders.find(x=>x.id===p.orderId);
-  if(o)o.status="Ready For Stitching";
-  saveDB();
-  printingPage();
-}
-
-function stitchedQty(orderId){
-  return stitchEntries.filter(e=>e.orderId===orderId).reduce((a,e)=>a+Number(e.qty||0),0);
-}
-
-function stitchingPage(){
-  let ready=orders.filter(o=>o.status==="Ready For Stitching" || o.status==="Stitching Running");
-  let rows="";
-  ready.forEach(o=>{
-    let done=stitchedQty(o.id);
-    let pending=Math.max(0,o.qty-done);
-    let pct=o.qty?Math.round((done/o.qty)*100):0;
-    rows+=`<tr>
-      <td>${o.id}<br>${o.company}</td>
-      <td>${o.qty}</td>
-      <td>${done}</td>
-      <td>${pending}</td>
-      <td><input id="worker_${o.id}" placeholder="Worker name"></td>
-      <td><input id="sqty_${o.id}" type="number" placeholder="Qty"></td>
-      <td><select id="ptype_${o.id}"><option>Monthly</option><option>Cash</option></select></td>
-      <td><input id="amt_${o.id}" type="number" placeholder="Amount"></td>
-      <td><input id="ot_${o.id}" type="number" placeholder="OT"></td>
-      <td><div class='progress'><div class='bar' style='width:${pct}%'></div></div>${pct}%<br>${badge(o.status)}</td>
-      <td><button class='btnG' onclick="addStitch('${o.id}')">Add</button><br><br><button class='btnG' onclick="completeStitch('${o.id}')">Complete</button></td>
-    </tr>`;
-  });
-  content.innerHTML=`<div class='card'><h1>Stitching Management ERP</h1><p>Worker-wise qty, OT, cash/monthly payment and pending tracking.</p><table><tr><th>Order</th><th>Total</th><th>Done</th><th>Pending</th><th>Worker</th><th>Qty</th><th>Payment</th><th>Amount</th><th>OT</th><th>Status</th><th>Action</th></tr>${rows}</table></div>`;
-}
-
-function addStitch(orderId){
-  let worker=document.getElementById("worker_"+orderId).value;
-  let qty=Number(document.getElementById("sqty_"+orderId).value||0);
-  let paymentType=document.getElementById("ptype_"+orderId).value;
-  let amount=Number(document.getElementById("amt_"+orderId).value||0);
-  let ot=Number(document.getElementById("ot_"+orderId).value||0);
-  if(!worker||!qty){alert("Enter worker and qty");return;}
-  stitchEntries.unshift({id:"ST-"+Date.now(),orderId,worker,qty,paymentType,amount,ot,date:new Date().toLocaleDateString("en-IN")});
-  let o=orders.find(x=>x.id===orderId);
-  o.status="Stitching Running";
-  saveDB();
-  stitchingPage();
-}
-
-function completeStitch(orderId){
-  let o=orders.find(x=>x.id===orderId);
-  o.status="Ready For Dispatch";
-  saveDB();
-  stitchingPage();
-}
-
-function stitchingReports(){
-  let rows="";
-  stitchEntries.forEach(e=>{
-    rows+=`<tr><td>${e.date}</td><td>${e.orderId}</td><td>${e.worker}</td><td>${e.qty}</td><td>${e.paymentType}</td><td>${money(e.amount)}</td><td>${money(e.ot)}</td></tr>`;
-  });
-  content.innerHTML=`<div class='card'><h1>Stitching Reports</h1><table><tr><th>Date</th><th>Order</th><th>Worker</th><th>Qty</th><th>Payment</th><th>Amount</th><th>OT</th></tr>${rows}</table></div>`;
-}
-
-dashboard();
+render();
 </script>
 </body>
 </html>
