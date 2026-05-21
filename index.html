@@ -1,20 +1,20 @@
-
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Phase 14 Cloud Backend ERP</title>
+<title>MediaHub Phase 15 Live Sync</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:20px}
 .card{background:#111;border:1px solid #333;border-radius:16px;padding:20px;margin-bottom:20px}
-.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 input,textarea,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
-button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700}
+button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;cursor:pointer}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #333;text-align:left;vertical-align:top}
 .badge{background:#22c55e20;color:#22c55e;padding:5px 10px;border-radius:999px;font-size:12px}
 .orange{background:#ff6b0020;color:#ff6b00}
+.red{background:#ef444420;color:#ef4444}
 pre{background:#0b0b0b;border:1px solid #333;border-radius:12px;padding:14px;overflow:auto;color:#ddd}
 </style>
 </head>
@@ -23,209 +23,112 @@ pre{background:#0b0b0b;border:1px solid #333;border-radius:12px;padding:14px;ove
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 14 - Cloud Backend Ready ERP</h1>
-<p>Supabase / Firebase Ready Structure + Data Model + Sync Plan</p>
+<h1>Phase 15 - Live Sync Engine</h1>
+<p>Supabase CRUD-ready structure + sync controls + API layer planning</p>
 </div>
 
 <div class="card">
-
-<h2>Cloud Config</h2>
+<h2>Supabase Config</h2>
 
 <div class="grid">
+<div>
+<label>Supabase URL</label>
+<input id="url" placeholder="https://xxxx.supabase.co">
+</div>
 
 <div>
-<label>Backend Provider</label>
-<select id="provider">
-<option>Supabase</option>
-<option>Firebase</option>
-<option>Custom API</option>
+<label>Anon Public Key</label>
+<input id="key" placeholder="Paste anon key">
+</div>
+
+<div>
+<label>Default Table</label>
+<select id="table">
+<option>orders</option>
+<option>users</option>
+<option>order_locations</option>
+<option>design_tasks</option>
+<option>printing_jobs</option>
+<option>stitching_entries</option>
+<option>dispatch_entries</option>
+<option>execution_photos</option>
+<option>accounts_entries</option>
 </select>
 </div>
 
 <div>
-<label>Project URL</label>
-<input id="projectUrl" placeholder="https://your-project.supabase.co">
+<label>Mode</label>
+<select id="mode">
+<option>Local Demo</option>
+<option>Supabase Ready</option>
+</select>
 </div>
-
-<div>
-<label>Anon / Public Key</label>
-<input id="anonKey" placeholder="Paste public key">
-</div>
-
 </div>
 
 <br>
-
-<button onclick="saveConfig()">Save Cloud Config</button>
-
+<button onclick="saveConfig()">Save Config</button>
+<button onclick="testConnection()">Test Connection UI</button>
 </div>
 
 <div class="card">
+<h2>Create Test Order</h2>
 
-<h2>ERP Tables Required</h2>
+<div class="grid">
+<div><label>Company</label><input id="company"></div>
+<div><label>Media</label><input id="media" value="Auto Rickshaw Hood Branding"></div>
+<div><label>City</label><input id="city"></div>
+<div><label>Qty</label><input id="qty" type="number"></div>
+<div><label>Amount</label><input id="amount" type="number"></div>
+<div><label>Status</label><select id="status"><option>New</option><option>Approved</option><option>Printing</option><option>Execution</option><option>Done</option></select></div>
+</div>
 
-<table>
+<br>
+<button onclick="createLocalOrder()">Create Local Order</button>
+<button onclick="exportJson()">Export JSON Backup</button>
+</div>
 
+<div class="card">
+<h2>Local Orders / Sync Preview</h2>
+<table id="ordersTable">
 <tr>
-<th>Table</th>
-<th>Purpose</th>
+<th>Order</th>
+<th>Company</th>
+<th>Media</th>
+<th>City</th>
+<th>Qty</th>
+<th>Amount</th>
 <th>Status</th>
 </tr>
-
-<tr>
-<td>users</td>
-<td>Role-based login: Admin, Sales, Design, Printing, Stitching, Dispatch, Execution, Accounts</td>
-<td><span class="badge orange">Required</span></td>
-</tr>
-
-<tr>
-<td>orders</td>
-<td>Main campaign/order details</td>
-<td><span class="badge orange">Required</span></td>
-</tr>
-
-<tr>
-<td>order_locations</td>
-<td>City-wise qty, design type, design file</td>
-<td><span class="badge orange">Required</span></td>
-</tr>
-
-<tr>
-<td>design_tasks</td>
-<td>Designer assignment, client approval, revision tracking</td>
-<td><span class="badge orange">Required</span></td>
-</tr>
-
-<tr>
-<td>printing_jobs</td>
-<td>Operator, machine, printed qty, ink, roll usage</td>
-<td><span class="badge orange">Required</span></td>
-</tr>
-
-<tr>
-<td>stitching_entries</td>
-<td>Worker qty, OT, cash/monthly payment</td>
-<td><span class="badge orange">Required</span></td>
-</tr>
-
-<tr>
-<td>dispatch_entries</td>
-<td>Bundle, vendor, LR, team/party dispatch</td>
-<td><span class="badge orange">Required</span></td>
-</tr>
-
-<tr>
-<td>execution_photos</td>
-<td>GPS photos, OCR vehicle number, execution proof</td>
-<td><span class="badge orange">Required</span></td>
-</tr>
-
-<tr>
-<td>accounts_entries</td>
-<td>Income, expense, outstanding, profit</td>
-<td><span class="badge orange">Required</span></td>
-</tr>
-
 </table>
-
 </div>
 
 <div class="card">
-
-<h2>Supabase SQL Starter</h2>
-
+<h2>API Layer Code For Later</h2>
 <pre>
-create table users (
-  id uuid primary key default gen_random_uuid(),
-  name text,
-  phone text,
-  role text,
-  status text default 'active',
-  created_at timestamp default now()
-);
+async function supabaseInsert(table, data){
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: "POST",
+    headers: {
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+      "Content-Type": "application/json",
+      "Prefer": "return=representation"
+    },
+    body: JSON.stringify(data)
+  });
+  return await response.json();
+}
 
-create table orders (
-  id uuid primary key default gen_random_uuid(),
-  order_no text,
-  company text,
-  person text,
-  contact text,
-  media text,
-  total_qty numeric,
-  final_amount numeric,
-  status text,
-  created_at timestamp default now()
-);
-
-create table order_locations (
-  id uuid primary key default gen_random_uuid(),
-  order_id uuid references orders(id),
-  location text,
-  qty numeric,
-  design_type text,
-  design_file text
-);
-
-create table design_tasks (
-  id uuid primary key default gen_random_uuid(),
-  order_id uuid references orders(id),
-  designer text,
-  status text,
-  client_approval text
-);
-
-create table printing_jobs (
-  id uuid primary key default gen_random_uuid(),
-  order_id uuid references orders(id),
-  operator text,
-  machine text,
-  total_qty numeric,
-  printed_qty numeric,
-  ink_used text,
-  roll_used text,
-  status text
-);
-
-create table stitching_entries (
-  id uuid primary key default gen_random_uuid(),
-  order_id uuid references orders(id),
-  worker text,
-  qty numeric,
-  payment_type text,
-  amount numeric,
-  ot_amount numeric
-);
-
-create table dispatch_entries (
-  id uuid primary key default gen_random_uuid(),
-  order_id uuid references orders(id),
-  dispatch_type text,
-  team_or_party text,
-  bundles numeric,
-  pcs numeric,
-  vendor text,
-  lr_number text
-);
-
-create table execution_photos (
-  id uuid primary key default gen_random_uuid(),
-  order_id uuid references orders(id),
-  vehicle_no text,
-  gps text,
-  photo_url text,
-  ocr_status text
-);
-
-create table accounts_entries (
-  id uuid primary key default gen_random_uuid(),
-  order_id uuid references orders(id),
-  type text,
-  amount numeric,
-  mode text,
-  status text
-);
+async function supabaseSelect(table){
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*`, {
+    headers: {
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": "Bearer " + SUPABASE_ANON_KEY
+    }
+  });
+  return await response.json();
+}
 </pre>
-
 </div>
 
 <div class="card" id="summary"></div>
@@ -233,50 +136,102 @@ create table accounts_entries (
 </div>
 
 <script>
-
-let config = JSON.parse(localStorage.getItem("cloudConfig") || "{}");
-
-function loadConfig(){
-document.getElementById("provider").value = config.provider || "Supabase";
-document.getElementById("projectUrl").value = config.projectUrl || "";
-document.getElementById("anonKey").value = config.anonKey || "";
-renderSummary();
-}
+let cloud = JSON.parse(localStorage.getItem("mh_cloud_config") || "{}");
+let orders = JSON.parse(localStorage.getItem("mh_phase15_orders") || "[]");
 
 function saveConfig(){
-
-config = {
-provider : document.getElementById("provider").value,
-projectUrl : document.getElementById("projectUrl").value,
-anonKey : document.getElementById("anonKey").value
-};
-
-localStorage.setItem("cloudConfig", JSON.stringify(config));
-
-renderSummary();
-
-alert("Cloud Config Saved Locally");
-
+  cloud = {
+    url: document.getElementById("url").value,
+    key: document.getElementById("key").value,
+    table: document.getElementById("table").value,
+    mode: document.getElementById("mode").value
+  };
+  localStorage.setItem("mh_cloud_config", JSON.stringify(cloud));
+  renderSummary("Config saved locally.");
 }
 
-function renderSummary(){
+function loadConfig(){
+  document.getElementById("url").value = cloud.url || "";
+  document.getElementById("key").value = cloud.key || "";
+  document.getElementById("table").value = cloud.table || "orders";
+  document.getElementById("mode").value = cloud.mode || "Local Demo";
+  renderTable();
+  renderSummary("Ready.");
+}
 
-document.getElementById("summary").innerHTML = `
-<h2>Cloud Summary</h2>
+function testConnection(){
+  if(!document.getElementById("url").value || !document.getElementById("key").value){
+    renderSummary("Missing Supabase URL or Key.");
+    return;
+  }
+  renderSummary("Connection UI ready. Next production step: enable live fetch/insert after RLS policies are created.");
+}
 
-<h3>Provider : ${config.provider || "Not Set"}</h3>
-<h3>Project URL : ${config.projectUrl || "Not Set"}</h3>
-<h3>Public Key : ${config.anonKey ? "Saved" : "Not Set"}</h3>
+function createLocalOrder(){
+  const order = {
+    order_no: "ORD-" + Date.now(),
+    company: document.getElementById("company").value,
+    media: document.getElementById("media").value,
+    city: document.getElementById("city").value,
+    qty: Number(document.getElementById("qty").value || 0),
+    amount: Number(document.getElementById("amount").value || 0),
+    status: document.getElementById("status").value
+  };
 
-<p>
-Next step: create these tables in Supabase and connect live CRUD API.
-</p>
-`;
+  orders.unshift(order);
+  localStorage.setItem("mh_phase15_orders", JSON.stringify(orders));
+  renderTable();
+  renderSummary("Local order created. Use this structure for Supabase insert.");
+}
 
+function renderTable(){
+  let html = `
+  <tr>
+  <th>Order</th>
+  <th>Company</th>
+  <th>Media</th>
+  <th>City</th>
+  <th>Qty</th>
+  <th>Amount</th>
+  <th>Status</th>
+  </tr>`;
+
+  orders.forEach(o=>{
+    html += `
+    <tr>
+    <td>${o.order_no}</td>
+    <td>${o.company}</td>
+    <td>${o.media}</td>
+    <td>${o.city}</td>
+    <td>${o.qty}</td>
+    <td>₹${Number(o.amount).toLocaleString("en-IN")}</td>
+    <td><span class="badge orange">${o.status}</span></td>
+    </tr>`;
+  });
+
+  document.getElementById("ordersTable").innerHTML = html;
+}
+
+function exportJson(){
+  const blob = new Blob([JSON.stringify({cloud, orders}, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "mediahub_phase15_backup.json";
+  a.click();
+}
+
+function renderSummary(msg){
+  document.getElementById("summary").innerHTML = `
+  <h2>Sync Summary</h2>
+  <h3>Status: <span class="badge">${msg}</span></h3>
+  <p>Provider URL: ${document.getElementById("url").value || "Not set"}</p>
+  <p>Default Table: ${document.getElementById("table").value || "orders"}</p>
+  <p>Mode: ${document.getElementById("mode").value || "Local Demo"}</p>
+  <p>Total Local Orders: ${orders.length}</p>
+  `;
 }
 
 loadConfig();
-
 </script>
 
 </body>
