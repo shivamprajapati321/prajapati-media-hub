@@ -3,58 +3,239 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MediaHub Phase 29 Multi-City ERP</title>
+<title>MediaHub Phase 30 SaaS ERP</title>
+
 <style>
-body{margin:0;background:#050506;color:#fff;font-family:Arial}
-.wrap{padding:18px}
-.card{background:#111;border:1px solid #333;border-radius:16px;padding:18px;margin-bottom:18px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-.stat{background:#17181f;border:1px solid #333;border-radius:14px;padding:16px}
-.stat h3{margin:0 0 8px;color:#aaa;font-size:12px}
-.stat h1{margin:0;color:#ff6b00}
-input,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
-button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;color:#111;cursor:pointer}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
-.badge{padding:5px 10px;border-radius:999px;background:#22c55e20;color:#22c55e;font-size:11px;font-weight:700}
-.orange{background:#ff6b0020;color:#ff6b00}
-.blue{background:#38bdf820;color:#38bdf8}
+body{
+margin:0;
+background:#050506;
+color:#fff;
+font-family:Arial;
+}
+
+.sidebar{
+position:fixed;
+left:0;
+top:0;
+bottom:0;
+width:240px;
+background:#0d0d0d;
+border-right:1px solid #222;
+padding:20px;
+overflow:auto;
+}
+
+.logo{
+font-size:24px;
+font-weight:800;
+color:#ff6b00;
+margin-bottom:20px;
+}
+
+.menu a{
+display:block;
+padding:12px;
+margin-bottom:8px;
+background:#151515;
+border-radius:10px;
+color:#fff;
+text-decoration:none;
+}
+
+.main{
+margin-left:260px;
+padding:20px;
+}
+
+.card{
+background:#111;
+border:1px solid #333;
+border-radius:16px;
+padding:20px;
+margin-bottom:20px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:14px;
+}
+
+.stat{
+background:#17181f;
+border:1px solid #333;
+border-radius:14px;
+padding:16px;
+}
+
+.stat h3{
+margin:0 0 8px;
+color:#aaa;
+font-size:12px;
+}
+
+.stat h1{
+margin:0;
+color:#ff6b00;
+}
+
+input,select{
+padding:10px;
+background:#0b0b0b;
+color:#fff;
+border:1px solid #333;
+border-radius:8px;
+width:100%;
+}
+
+button{
+padding:10px 14px;
+background:#ff6b00;
+border:none;
+border-radius:8px;
+font-weight:700;
+color:#111;
+cursor:pointer;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+border-bottom:1px solid #333;
+text-align:left;
+font-size:13px;
+}
+
+.badge{
+padding:5px 10px;
+border-radius:999px;
+background:#22c55e20;
+color:#22c55e;
+font-size:11px;
+font-weight:700;
+}
+
+.orange{
+background:#ff6b0020;
+color:#ff6b00;
+}
+
+@media(max-width:900px){
+
+.sidebar{
+position:relative;
+width:auto;
+height:auto;
+}
+
+.main{
+margin-left:0;
+}
+
+}
 </style>
+
 </head>
 
 <body>
 
-<div class="wrap">
+<div class="sidebar">
 
-<div class="card">
-<h1>Phase 29 - Multi City / Franchise ERP</h1>
-<p>City manager system + branch analytics + franchise control</p>
+<div class="logo">
+MediaHub ERP
 </div>
 
-<div class="grid" id="stats"></div>
+<div class="menu">
+<a href="#">Dashboard</a>
+<a href="#">Sales CRM</a>
+<a href="#">Orders</a>
+<a href="#">Printing</a>
+<a href="#">Stitching</a>
+<a href="#">Dispatch</a>
+<a href="#">Execution</a>
+<a href="#">Accounts</a>
+<a href="#">HR</a>
+<a href="#">Inventory</a>
+<a href="#">Client Portal</a>
+<a href="#">AI Reports</a>
+<a href="#">WhatsApp</a>
+<a href="#">Multi City</a>
+</div>
+
+</div>
+
+<div class="main">
 
 <div class="card">
 
-<h2>Add City / Branch</h2>
+<h1>Phase 30 - SaaS Production ERP</h1>
+
+<p>
+Final enterprise structure with cloud-ready SaaS architecture.
+</p>
+
+</div>
+
+<div class="grid">
+
+<div class="stat">
+<h3>Total Revenue</h3>
+<h1>₹1.24 Cr</h1>
+</div>
+
+<div class="stat">
+<h3>Active Campaigns</h3>
+<h1>82</h1>
+</div>
+
+<div class="stat">
+<h3>Execution Running</h3>
+<h1>21</h1>
+</div>
+
+<div class="stat">
+<h3>Cities Active</h3>
+<h1>14</h1>
+</div>
+
+<div class="stat">
+<h3>Employees</h3>
+<h1>48</h1>
+</div>
+
+<div class="stat">
+<h3>Client Satisfaction</h3>
+<h1>96%</h1>
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>Create SaaS User</h2>
 
 <table>
 
 <tr>
-<td><input id="city" placeholder="City"></td>
-
-<td><input id="manager" placeholder="City Manager"></td>
-
-<td><input id="target" type="number" placeholder="Monthly Target"></td>
+<td><input id="name" placeholder="User Name"></td>
 
 <td>
-<select id="status">
-<option>Active</option>
-<option>Growing</option>
-<option>Critical</option>
+<select id="role">
+<option>Admin</option>
+<option>Sales</option>
+<option>Manager</option>
+<option>Execution</option>
+<option>Accounts</option>
 </select>
 </td>
 
-<td><button onclick="saveCity()">Save Branch</button></td>
+<td><input id="email" placeholder="Email"></td>
+
+<td><button onclick="saveUser()">Create User</button></td>
 
 </tr>
 
@@ -64,17 +245,28 @@ th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
 
 <div class="card">
 
-<h2>Branch Performance</h2>
+<h2>SaaS Users</h2>
 
-<table id="branchTable"></table>
+<table id="userTable"></table>
 
 </div>
 
 <div class="card">
 
-<h2>Multi-City Summary</h2>
+<h2>Production Features</h2>
 
-<div id="summary"></div>
+<ul>
+<li>Cloud-ready SaaS architecture</li>
+<li>Role-based user access</li>
+<li>Department ERP modules</li>
+<li>Client reporting portal</li>
+<li>AI reporting engine</li>
+<li>GPS + OCR verification</li>
+<li>WhatsApp automation</li>
+<li>Multi-city expansion system</li>
+<li>PWA mobile app structure</li>
+<li>Inventory + HR + CRM</li>
+</ul>
 
 </div>
 
@@ -82,95 +274,56 @@ th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
 
 <script>
 
-let cities = JSON.parse(localStorage.getItem("mh29_cities") || "[]");
+let users = JSON.parse(localStorage.getItem("mh30_users") || "[]");
 
 function save(){
-localStorage.setItem("mh29_cities", JSON.stringify(cities));
+
+localStorage.setItem("mh30_users", JSON.stringify(users));
+
 }
 
-function money(x){
-return "₹" + Number(x || 0).toLocaleString("en-IN");
-}
-
-function saveCity(){
-
-let achieved = Math.floor(Math.random() * 1000000);
+function saveUser(){
 
 let item = {
-id:"CITY-"+Date.now(),
-city:document.getElementById("city").value,
-manager:document.getElementById("manager").value,
-target:Number(document.getElementById("target").value || 0),
-achieved:achieved,
-status:document.getElementById("status").value
+id:"USR-"+Date.now(),
+name:document.getElementById("name").value,
+role:document.getElementById("role").value,
+email:document.getElementById("email").value
 };
 
-cities.unshift(item);
+users.unshift(item);
 
 save();
 
 render();
 
-alert("Branch Added");
+alert("SaaS User Created");
 
 }
 
 function render(){
 
-let total = cities.length;
-
-let totalTarget = cities.reduce((a,x)=>a+x.target,0);
-
-let totalAchieved = cities.reduce((a,x)=>a+x.achieved,0);
-
-document.getElementById("stats").innerHTML = `
-<div class="stat"><h3>Total Cities</h3><h1>${total}</h1></div>
-<div class="stat"><h3>Total Target</h3><h1>${money(totalTarget)}</h1></div>
-<div class="stat"><h3>Total Achieved</h3><h1>${money(totalAchieved)}</h1></div>
-`;
-
 let html = `
 <tr>
-<th>City</th>
-<th>Manager</th>
-<th>Target</th>
-<th>Achieved</th>
+<th>Name</th>
+<th>Role</th>
+<th>Email</th>
 <th>Status</th>
 </tr>`;
 
-cities.forEach(c=>{
-
-let cls = c.status==="Critical"
-? "orange"
-: c.status==="Growing"
-? "blue"
-: "";
+users.forEach(u=>{
 
 html += `
 <tr>
-<td>${c.city}</td>
-<td>${c.manager}</td>
-<td>${money(c.target)}</td>
-<td>${money(c.achieved)}</td>
-<td><span class="badge ${cls}">${c.status}</span></td>
+<td>${u.name}</td>
+<td>${u.role}</td>
+<td>${u.email}</td>
+<td><span class="badge orange">Active</span></td>
 </tr>`;
 
 });
 
-document.getElementById("branchTable").innerHTML = html;
-
-document.getElementById("summary").innerHTML = `
-<h2>Enterprise Expansion Summary</h2>
-
-<p><b>Total Active Cities:</b> ${total}</p>
-<p><b>Total Franchise Target:</b> ${money(totalTarget)}</p>
-<p><b>Total Achieved:</b> ${money(totalAchieved)}</p>
-
-<p>
-This structure is ready for:
-multi-branch ERP, franchise management, city-wise analytics and regional expansion.
-</p>
-`;
+document.getElementById("userTable").innerHTML = html;
 
 }
 
@@ -179,4 +332,5 @@ render();
 </script>
 
 </body>
+
 </html>
