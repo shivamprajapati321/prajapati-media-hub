@@ -3,10 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MediaHub Phase 28 PWA Mobile App</title>
-
-<link rel="manifest" href="manifest.json">
-
+<title>MediaHub Phase 29 Multi-City ERP</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:18px}
@@ -15,12 +12,13 @@ body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .stat{background:#17181f;border:1px solid #333;border-radius:14px;padding:16px}
 .stat h3{margin:0 0 8px;color:#aaa;font-size:12px}
 .stat h1{margin:0;color:#ff6b00}
-button{padding:12px 16px;background:#ff6b00;border:none;border-radius:10px;font-weight:700;color:#111;cursor:pointer}
-input,select,textarea{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
+input,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
+button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;color:#111;cursor:pointer}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
 .badge{padding:5px 10px;border-radius:999px;background:#22c55e20;color:#22c55e;font-size:11px;font-weight:700}
 .orange{background:#ff6b0020;color:#ff6b00}
+.blue{background:#38bdf820;color:#38bdf8}
 </style>
 </head>
 
@@ -29,36 +27,35 @@ th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 28 - Mobile PWA ERP</h1>
-<p>Installable mobile app + offline-ready workflow</p>
+<h1>Phase 29 - Multi City / Franchise ERP</h1>
+<p>City manager system + branch analytics + franchise control</p>
 </div>
 
 <div class="grid" id="stats"></div>
 
 <div class="card">
 
-<h2>Mobile Execution Entry</h2>
+<h2>Add City / Branch</h2>
 
 <table>
 
 <tr>
-<td><input id="team" placeholder="Team Name"></td>
-<td><input id="vehicle" placeholder="Vehicle Number"></td>
 <td><input id="city" placeholder="City"></td>
-</tr>
 
-<tr>
+<td><input id="manager" placeholder="City Manager"></td>
+
+<td><input id="target" type="number" placeholder="Monthly Target"></td>
+
 <td>
 <select id="status">
-<option>Started</option>
-<option>Running</option>
-<option>Completed</option>
+<option>Active</option>
+<option>Growing</option>
+<option>Critical</option>
 </select>
 </td>
 
-<td><input id="gps" placeholder="GPS Coordinates"></td>
+<td><button onclick="saveCity()">Save Branch</button></td>
 
-<td><button onclick="saveEntry()">Save Offline Entry</button></td>
 </tr>
 
 </table>
@@ -66,26 +63,18 @@ th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
 </div>
 
 <div class="card">
-<h2>Offline Sync Queue</h2>
-<table id="queueTable"></table>
+
+<h2>Branch Performance</h2>
+
+<table id="branchTable"></table>
+
 </div>
 
 <div class="card">
-<h2>PWA Features</h2>
 
-<ul>
-<li>Installable mobile app</li>
-<li>Offline storage</li>
-<li>Field-ready UI</li>
-<li>GPS workflow</li>
-<li>Execution queue</li>
-<li>Future camera integration</li>
-<li>Push notification ready</li>
-</ul>
+<h2>Multi-City Summary</h2>
 
-<br>
-
-<button onclick="installInfo()">Install App Guide</button>
+<div id="summary"></div>
 
 </div>
 
@@ -93,85 +82,96 @@ th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
 
 <script>
 
-let entries = JSON.parse(localStorage.getItem("mh28_pwa_entries") || "[]");
+let cities = JSON.parse(localStorage.getItem("mh29_cities") || "[]");
 
 function save(){
-localStorage.setItem("mh28_pwa_entries", JSON.stringify(entries));
+localStorage.setItem("mh29_cities", JSON.stringify(cities));
 }
 
-function saveEntry(){
+function money(x){
+return "₹" + Number(x || 0).toLocaleString("en-IN");
+}
+
+function saveCity(){
+
+let achieved = Math.floor(Math.random() * 1000000);
 
 let item = {
-id:"PWA-"+Date.now(),
-team:document.getElementById("team").value,
-vehicle:document.getElementById("vehicle").value,
+id:"CITY-"+Date.now(),
 city:document.getElementById("city").value,
-status:document.getElementById("status").value,
-gps:document.getElementById("gps").value,
-time:new Date().toLocaleString("en-IN"),
-sync:"Pending"
+manager:document.getElementById("manager").value,
+target:Number(document.getElementById("target").value || 0),
+achieved:achieved,
+status:document.getElementById("status").value
 };
 
-entries.unshift(item);
+cities.unshift(item);
 
 save();
 
 render();
 
-alert("Offline Entry Saved");
+alert("Branch Added");
 
 }
 
 function render(){
 
-let total = entries.length;
+let total = cities.length;
 
-let pending = entries.filter(x=>x.sync==="Pending").length;
+let totalTarget = cities.reduce((a,x)=>a+x.target,0);
 
-let completed = entries.filter(x=>x.status==="Completed").length;
+let totalAchieved = cities.reduce((a,x)=>a+x.achieved,0);
 
 document.getElementById("stats").innerHTML = `
-<div class="stat"><h3>Total Offline Entries</h3><h1>${total}</h1></div>
-<div class="stat"><h3>Pending Sync</h3><h1>${pending}</h1></div>
-<div class="stat"><h3>Completed</h3><h1>${completed}</h1></div>
+<div class="stat"><h3>Total Cities</h3><h1>${total}</h1></div>
+<div class="stat"><h3>Total Target</h3><h1>${money(totalTarget)}</h1></div>
+<div class="stat"><h3>Total Achieved</h3><h1>${money(totalAchieved)}</h1></div>
 `;
 
 let html = `
 <tr>
-<th>Team</th>
-<th>Vehicle</th>
+<th>City</th>
+<th>Manager</th>
+<th>Target</th>
+<th>Achieved</th>
 <th>Status</th>
-<th>Sync</th>
-<th>Time</th>
 </tr>`;
 
-entries.forEach(e=>{
+cities.forEach(c=>{
+
+let cls = c.status==="Critical"
+? "orange"
+: c.status==="Growing"
+? "blue"
+: "";
 
 html += `
 <tr>
-<td>${e.team}</td>
-<td>${e.vehicle}</td>
-<td><span class="badge orange">${e.status}</span></td>
-<td><span class="badge">${e.sync}</span></td>
-<td>${e.time}</td>
+<td>${c.city}</td>
+<td>${c.manager}</td>
+<td>${money(c.target)}</td>
+<td>${money(c.achieved)}</td>
+<td><span class="badge ${cls}">${c.status}</span></td>
 </tr>`;
 
 });
 
-document.getElementById("queueTable").innerHTML = html;
+document.getElementById("branchTable").innerHTML = html;
 
-}
+document.getElementById("summary").innerHTML = `
+<h2>Enterprise Expansion Summary</h2>
 
-function installInfo(){
+<p><b>Total Active Cities:</b> ${total}</p>
+<p><b>Total Franchise Target:</b> ${money(totalTarget)}</p>
+<p><b>Total Achieved:</b> ${money(totalAchieved)}</p>
 
-alert(
-"Open in Chrome Mobile → Click 3 dots → Add to Home Screen"
-);
+<p>
+This structure is ready for:
+multi-branch ERP, franchise management, city-wise analytics and regional expansion.
+</p>
+`;
 
-}
-
-if('serviceWorker' in navigator){
-navigator.serviceWorker.register('sw.js');
 }
 
 render();
