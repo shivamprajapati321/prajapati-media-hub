@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MediaHub Phase 23 HR ERP</title>
+<title>MediaHub Phase 24 Inventory ERP</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:18px}
@@ -26,33 +26,35 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 23 - HR + Attendance ERP</h1>
-<p>Employee management + GPS attendance + payroll-ready structure</p>
+<h1>Phase 24 - Inventory + Raw Material ERP</h1>
+<p>Stock management + inward/outward + low stock alerts</p>
 </div>
 
 <div class="grid" id="stats"></div>
 
 <div class="card">
 
-<h2>Add Employee</h2>
+<h2>Add Inventory Item</h2>
 
 <table>
 <tr>
-<td><input id="name" placeholder="Employee Name"></td>
+<td><input id="item" placeholder="Item Name"></td>
+
 <td>
-<select id="department">
-<option>Sales</option>
-<option>Design</option>
-<option>Printing</option>
-<option>Stitching</option>
-<option>Dispatch</option>
-<option>Execution</option>
-<option>Accounts</option>
-<option>Admin</option>
+<select id="category">
+<option>Rexin</option>
+<option>Ink</option>
+<option>Flex Roll</option>
+<option>Vinyl</option>
+<option>Accessories</option>
 </select>
 </td>
-<td><input id="salary" type="number" placeholder="Monthly Salary"></td>
-<td><button onclick="saveEmployee()">Save Employee</button></td>
+
+<td><input id="vendor" placeholder="Vendor"></td>
+
+<td><input id="stock" type="number" placeholder="Current Stock"></td>
+
+<td><button onclick="saveItem()">Save Item</button></td>
 </tr>
 </table>
 
@@ -60,49 +62,46 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 
 <div class="card">
 
-<h2>Attendance Entry</h2>
+<h2>Stock Movement</h2>
 
 <table>
 <tr>
-<td><input id="empName" placeholder="Employee Name"></td>
 
 <td>
-<select id="attendance">
-<option>Present</option>
-<option>Absent</option>
-<option>Leave</option>
-<option>Half Day</option>
+<select id="moveItem"></select>
+</td>
+
+<td>
+<select id="moveType">
+<option>Inward</option>
+<option>Outward</option>
+<option>Consumption</option>
 </select>
 </td>
 
-<td><input id="gps" placeholder="GPS Location"></td>
+<td><input id="qty" type="number" placeholder="Qty"></td>
 
-<td>
-<select id="shift">
-<option>Morning</option>
-<option>Evening</option>
-<option>Night</option>
-</select>
-</td>
+<td><input id="remarks" placeholder="Remarks"></td>
 
-<td><button onclick="saveAttendance()">Save Attendance</button></td>
+<td><button onclick="saveMovement()">Save Entry</button></td>
+
 </tr>
 </table>
 
 </div>
 
 <div class="card">
-<h2>Employees</h2>
-<table id="employeeTable"></table>
+<h2>Inventory Stock</h2>
+<table id="inventoryTable"></table>
 </div>
 
 <div class="card">
-<h2>Attendance Reports</h2>
-<table id="attendanceTable"></table>
+<h2>Stock Movement Reports</h2>
+<table id="movementTable"></table>
 </div>
 
 <div class="card">
-<h2>Payroll Summary</h2>
+<h2>Inventory Summary</h2>
 <div id="summary"></div>
 </div>
 
@@ -110,132 +109,154 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 
 <script>
 
-let employees = JSON.parse(localStorage.getItem("mh23_employees") || "[]");
-let attendance = JSON.parse(localStorage.getItem("mh23_attendance") || "[]");
+let inventory = JSON.parse(localStorage.getItem("mh24_inventory") || "[]");
+let movements = JSON.parse(localStorage.getItem("mh24_movements") || "[]");
 
 function save(){
-localStorage.setItem("mh23_employees", JSON.stringify(employees));
-localStorage.setItem("mh23_attendance", JSON.stringify(attendance));
+localStorage.setItem("mh24_inventory", JSON.stringify(inventory));
+localStorage.setItem("mh24_movements", JSON.stringify(movements));
 }
 
-function money(x){
-return "₹" + Number(x || 0).toLocaleString("en-IN");
-}
-
-function saveEmployee(){
-
-let emp = {
-id:"EMP-"+Date.now(),
-name:document.getElementById("name").value,
-department:document.getElementById("department").value,
-salary:Number(document.getElementById("salary").value || 0)
-};
-
-employees.unshift(emp);
-
-save();
-
-render();
-
-alert("Employee Saved");
-
-}
-
-function saveAttendance(){
+function saveItem(){
 
 let item = {
-id:"ATT-"+Date.now(),
-name:document.getElementById("empName").value,
-attendance:document.getElementById("attendance").value,
-gps:document.getElementById("gps").value,
-shift:document.getElementById("shift").value,
-time:new Date().toLocaleString("en-IN")
+id:"INV-"+Date.now(),
+name:document.getElementById("item").value,
+category:document.getElementById("category").value,
+vendor:document.getElementById("vendor").value,
+stock:Number(document.getElementById("stock").value || 0)
 };
 
-attendance.unshift(item);
+inventory.unshift(item);
 
 save();
 
 render();
 
-alert("Attendance Saved");
+alert("Inventory Item Saved");
+
+}
+
+function saveMovement(){
+
+let itemId = document.getElementById("moveItem").value;
+
+let inv = inventory.find(x=>x.id===itemId);
+
+if(!inv){
+alert("Select item");
+return;
+}
+
+let type = document.getElementById("moveType").value;
+let qty = Number(document.getElementById("qty").value || 0);
+
+if(type === "Inward"){
+inv.stock += qty;
+}
+else{
+inv.stock -= qty;
+if(inv.stock < 0){
+inv.stock = 0;
+}
+}
+
+movements.unshift({
+id:"MOV-"+Date.now(),
+item:inv.name,
+type:type,
+qty:qty,
+remarks:document.getElementById("remarks").value,
+time:new Date().toLocaleString("en-IN")
+});
+
+save();
+
+render();
+
+alert("Stock Movement Saved");
 
 }
 
 function render(){
 
-let totalEmp = employees.length;
-let totalSalary = employees.reduce((a,x)=>a+x.salary,0);
-
-let present = attendance.filter(x=>x.attendance==="Present").length;
-let leave = attendance.filter(x=>x.attendance==="Leave").length;
-let absent = attendance.filter(x=>x.attendance==="Absent").length;
+let totalItems = inventory.length;
+let lowStock = inventory.filter(x=>x.stock <= 20).length;
+let totalStock = inventory.reduce((a,x)=>a+x.stock,0);
 
 document.getElementById("stats").innerHTML = `
-<div class="stat"><h3>Total Employees</h3><h1>${totalEmp}</h1></div>
-<div class="stat"><h3>Present</h3><h1>${present}</h1></div>
-<div class="stat"><h3>Leave</h3><h1>${leave}</h1></div>
-<div class="stat"><h3>Absent</h3><h1>${absent}</h1></div>
-<div class="stat"><h3>Total Payroll</h3><h1>${money(totalSalary)}</h1></div>
+<div class="stat"><h3>Total Items</h3><h1>${totalItems}</h1></div>
+<div class="stat"><h3>Total Stock</h3><h1>${totalStock}</h1></div>
+<div class="stat"><h3>Low Stock Alerts</h3><h1>${lowStock}</h1></div>
 `;
 
-let empHtml = `
+document.getElementById("moveItem").innerHTML = inventory.map(i=>`
+<option value="${i.id}">${i.name}</option>
+`).join("");
+
+let invHtml = `
 <tr>
-<th>Name</th>
-<th>Department</th>
-<th>Salary</th>
+<th>Item</th>
+<th>Category</th>
+<th>Vendor</th>
+<th>Stock</th>
+<th>Status</th>
 </tr>`;
 
-employees.forEach(e=>{
+inventory.forEach(i=>{
 
-empHtml += `
+let cls = i.stock <= 20 ? "red" : "";
+
+invHtml += `
 <tr>
-<td>${e.name}</td>
-<td>${e.department}</td>
-<td>${money(e.salary)}</td>
+<td>${i.name}</td>
+<td>${i.category}</td>
+<td>${i.vendor}</td>
+<td>${i.stock}</td>
+<td><span class="badge ${cls}">${i.stock <= 20 ? "Low Stock" : "Available"}</span></td>
 </tr>`;
 
 });
 
-document.getElementById("employeeTable").innerHTML = empHtml;
+document.getElementById("inventoryTable").innerHTML = invHtml;
 
-let attHtml = `
+let movHtml = `
 <tr>
-<th>Name</th>
-<th>Status</th>
-<th>Shift</th>
-<th>GPS</th>
+<th>Item</th>
+<th>Type</th>
+<th>Qty</th>
+<th>Remarks</th>
 <th>Time</th>
 </tr>`;
 
-attendance.forEach(a=>{
+movements.forEach(m=>{
 
-let cls = a.attendance==="Absent" ? "red" : a.attendance==="Leave" ? "orange" : "";
+let cls = m.type === "Outward" || m.type === "Consumption"
+? "orange"
+: "";
 
-attHtml += `
+movHtml += `
 <tr>
-<td>${a.name}</td>
-<td><span class="badge ${cls}">${a.attendance}</span></td>
-<td>${a.shift}</td>
-<td>${a.gps}</td>
-<td>${a.time}</td>
+<td>${m.item}</td>
+<td><span class="badge ${cls}">${m.type}</span></td>
+<td>${m.qty}</td>
+<td>${m.remarks}</td>
+<td>${m.time}</td>
 </tr>`;
 
 });
 
-document.getElementById("attendanceTable").innerHTML = attHtml;
+document.getElementById("movementTable").innerHTML = movHtml;
 
 document.getElementById("summary").innerHTML = `
-<h2>HR Summary</h2>
+<h2>Inventory Summary</h2>
 
-<p><b>Total Employees:</b> ${totalEmp}</p>
-<p><b>Total Payroll:</b> ${money(totalSalary)}</p>
-<p><b>Present Today:</b> ${present}</p>
-<p><b>Leaves:</b> ${leave}</p>
-<p><b>Absent:</b> ${absent}</p>
+<p><b>Total Inventory Items:</b> ${totalItems}</p>
+<p><b>Total Stock Units:</b> ${totalStock}</p>
+<p><b>Low Stock Alerts:</b> ${lowStock}</p>
 
 <p>
-HR structure ready for salary system, GPS attendance and payroll automation.
+Inventory engine ready for production stock deduction and purchase tracking.
 </p>
 `;
 
