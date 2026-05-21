@@ -2,21 +2,25 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>MediaHub Phase 16 CRUD Console</title>
+<title>MediaHub Phase 17 Operations Center</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:20px}
 .card{background:#111;border:1px solid #333;border-radius:16px;padding:20px;margin-bottom:20px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-input,textarea,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
-textarea{min-height:140px;font-family:monospace}
-button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;cursor:pointer;margin:4px 4px 4px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.stat{background:#17181f;border:1px solid #333;border-radius:14px;padding:16px}
+.stat h3{margin:0 0 10px;color:#aaa;font-size:12px}
+.stat h1{margin:0;color:#ff6b00}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #333;text-align:left;vertical-align:top}
-.badge{background:#22c55e20;color:#22c55e;padding:5px 10px;border-radius:999px;font-size:12px}
+button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+input,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
+.badge{padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#22c55e20;color:#22c55e}
 .orange{background:#ff6b0020;color:#ff6b00}
 .red{background:#ef444420;color:#ef4444}
-pre{background:#0b0b0b;border:1px solid #333;border-radius:12px;padding:14px;overflow:auto;color:#ddd}
+.timeline{border-left:2px solid #333;padding-left:16px}
+.event{margin-bottom:16px}
+.event small{color:#999}
 </style>
 </head>
 <body>
@@ -24,195 +28,185 @@ pre{background:#0b0b0b;border:1px solid #333;border-radius:12px;padding:14px;ove
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 16 - Supabase CRUD Console</h1>
-<p>Live API Testing Console + Local Fallback + Table Payload Editor</p>
+<h1>Phase 17 - Operations Control Center</h1>
+<p>Live KPI + Alerts + Targets + Activity Timeline</p>
 </div>
-
-<div class="card">
-<h2>Supabase Connection</h2>
 
 <div class="grid">
-<div>
-<label>Supabase URL</label>
-<input id="url" placeholder="https://xxxx.supabase.co">
+
+<div class="stat">
+<h3>Total Active Campaigns</h3>
+<h1 id="activeCampaigns">0</h1>
 </div>
 
-<div>
-<label>Anon Public Key</label>
-<input id="key" placeholder="Paste anon public key">
+<div class="stat">
+<h3>Printing Running</h3>
+<h1 id="printingRunning">0</h1>
 </div>
 
-<div>
-<label>Table</label>
-<select id="table" onchange="loadTemplate()">
-<option>orders</option>
-<option>users</option>
-<option>order_locations</option>
-<option>design_tasks</option>
-<option>printing_jobs</option>
-<option>stitching_entries</option>
-<option>dispatch_entries</option>
-<option>execution_photos</option>
-<option>accounts_entries</option>
+<div class="stat">
+<h3>Execution Teams Live</h3>
+<h1 id="executionTeams">0</h1>
+</div>
+
+<div class="stat">
+<h3>Pending Dispatch</h3>
+<h1 id="pendingDispatch">0</h1>
+</div>
+
+<div class="stat">
+<h3>Today Target</h3>
+<h1 id="todayTarget">0</h1>
+</div>
+
+<div class="stat">
+<h3>Today Completed</h3>
+<h1 id="todayCompleted">0</h1>
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>Create Department Alert</h2>
+
+<table>
+<tr>
+<td><input id="department" placeholder="Department"></td>
+<td><input id="message" placeholder="Alert message"></td>
+<td>
+<select id="priority">
+<option>Normal</option>
+<option>Urgent</option>
+<option>Critical</option>
 </select>
-</div>
+</td>
+<td><button onclick="addAlert()">Create Alert</button></td>
+</tr>
+</table>
 
-<div>
-<label>Record ID For Update/Delete</label>
-<input id="recordId" placeholder="uuid or id">
-</div>
-</div>
-
-<br>
-<button onclick="saveConfig()">Save Config</button>
-<button onclick="testSelect()">Test Select</button>
 </div>
 
 <div class="card">
-<h2>Payload Editor</h2>
-<textarea id="payload"></textarea>
-<br>
-<button onclick="insertRecord()">Insert Record</button>
-<button onclick="selectRecords()">Select Records</button>
-<button onclick="updateRecord()">Update Record</button>
-<button onclick="deleteRecord()">Delete Record</button>
-<button onclick="saveLocal()">Save Local Fallback</button>
+
+<h2>Department Alerts</h2>
+
+<table id="alertsTable">
+
+<tr>
+<th>Department</th>
+<th>Message</th>
+<th>Priority</th>
+<th>Time</th>
+</tr>
+
+</table>
+
 </div>
 
 <div class="card">
-<h2>Result / Logs</h2>
-<pre id="log">Ready.</pre>
-</div>
 
-<div class="card">
-<h2>Local Fallback Records</h2>
-<table id="localTable"></table>
+<h2>Activity Timeline</h2>
+
+<div class="timeline" id="timeline"></div>
+
 </div>
 
 </div>
 
 <script>
-let config = JSON.parse(localStorage.getItem("mh_phase16_config") || "{}");
-let localRecords = JSON.parse(localStorage.getItem("mh_phase16_local") || "[]");
 
-const templates = {
-orders:{order_no:"ORD-1001",company:"Demo Company",person:"Contact Person",contact:"9999999999",media:"Auto Rickshaw Hood Branding",total_qty:100,final_amount:50000,status:"New"},
-users:{name:"Admin User",phone:"9922138138",role:"Admin",status:"active"},
-order_locations:{order_id:"ORDER_UUID_HERE",location:"Pune",qty:100,design_type:"Same Design",design_file:""},
-design_tasks:{order_id:"ORDER_UUID_HERE",designer:"Designer Name",status:"Pending",client_approval:"Pending"},
-printing_jobs:{order_id:"ORDER_UUID_HERE",operator:"Operator Name",machine:"Machine 1",total_qty:100,printed_qty:0,ink_used:"",roll_used:"",status:"Pending"},
-stitching_entries:{order_id:"ORDER_UUID_HERE",worker:"Worker Name",qty:10,payment_type:"Monthly",amount:0,ot_amount:0},
-dispatch_entries:{order_id:"ORDER_UUID_HERE",dispatch_type:"Team Dispatch",team_or_party:"Team A",bundles:2,pcs:100,vendor:"Vendor Name",lr_number:""},
-execution_photos:{order_id:"ORDER_UUID_HERE",vehicle_no:"MH12AB1234",gps:"18.5204,73.8567",photo_url:"",ocr_status:"Manual Verify"},
-accounts_entries:{order_id:"ORDER_UUID_HERE",type:"Income",amount:50000,mode:"Bank",status:"Paid"}
+let alerts = JSON.parse(localStorage.getItem("mh17_alerts") || "[]");
+let timeline = JSON.parse(localStorage.getItem("mh17_timeline") || "[]");
+
+function save(){
+localStorage.setItem("mh17_alerts", JSON.stringify(alerts));
+localStorage.setItem("mh17_timeline", JSON.stringify(timeline));
+}
+
+function randomData(){
+document.getElementById("activeCampaigns").innerText = 18;
+document.getElementById("printingRunning").innerText = 6;
+document.getElementById("executionTeams").innerText = 9;
+document.getElementById("pendingDispatch").innerText = 4;
+document.getElementById("todayTarget").innerText = 2400;
+document.getElementById("todayCompleted").innerText = 1620;
+}
+
+function addAlert(){
+
+const item = {
+department : document.getElementById("department").value,
+message : document.getElementById("message").value,
+priority : document.getElementById("priority").value,
+time : new Date().toLocaleString("en-IN")
 };
 
-function log(x){
-  document.getElementById("log").textContent = typeof x==="string" ? x : JSON.stringify(x,null,2);
+alerts.unshift(item);
+
+timeline.unshift({
+title : item.department + " Alert",
+message : item.message,
+time : item.time
+});
+
+save();
+
+render();
+
+alert("Alert Created");
+
 }
 
-function loadConfig(){
-  document.getElementById("url").value = config.url || "";
-  document.getElementById("key").value = config.key || "";
-  document.getElementById("table").value = config.table || "orders";
-  loadTemplate();
-  renderLocal();
+function render(){
+
+let html = `
+<tr>
+<th>Department</th>
+<th>Message</th>
+<th>Priority</th>
+<th>Time</th>
+</tr>
+`;
+
+alerts.forEach(a=>{
+
+let cls = a.priority === "Critical" ? "red" : a.priority === "Urgent" ? "orange" : "";
+
+html += `
+<tr>
+<td>${a.department}</td>
+<td>${a.message}</td>
+<td><span class="badge ${cls}">${a.priority}</span></td>
+<td>${a.time}</td>
+</tr>
+`;
+
+});
+
+document.getElementById("alertsTable").innerHTML = html;
+
+let timelineHtml = "";
+
+timeline.forEach(t=>{
+
+timelineHtml += `
+<div class="event">
+<h3>${t.title}</h3>
+<p>${t.message}</p>
+<small>${t.time}</small>
+</div>
+`;
+
+});
+
+document.getElementById("timeline").innerHTML = timelineHtml;
+
 }
 
-function saveConfig(){
-  config = {
-    url:document.getElementById("url").value.trim(),
-    key:document.getElementById("key").value.trim(),
-    table:document.getElementById("table").value
-  };
-  localStorage.setItem("mh_phase16_config", JSON.stringify(config));
-  log("Config saved locally.");
-}
+randomData();
+render();
 
-function loadTemplate(){
-  const table = document.getElementById("table").value;
-  document.getElementById("payload").value = JSON.stringify(templates[table], null, 2);
-}
-
-function headers(){
-  const key = document.getElementById("key").value.trim();
-  return {
-    "apikey": key,
-    "Authorization": "Bearer " + key,
-    "Content-Type": "application/json",
-    "Prefer": "return=representation"
-  };
-}
-
-function baseUrl(){
-  const url = document.getElementById("url").value.trim().replace(/\\/$/,"");
-  const table = document.getElementById("table").value;
-  return url + "/rest/v1/" + table;
-}
-
-async function testSelect(){
-  await selectRecords();
-}
-
-async function insertRecord(){
-  try{
-    const payload = JSON.parse(document.getElementById("payload").value);
-    const res = await fetch(baseUrl(), {method:"POST", headers:headers(), body:JSON.stringify(payload)});
-    const data = await res.json();
-    log({status:res.status, data});
-  }catch(e){log("Insert error: " + e.message);}
-}
-
-async function selectRecords(){
-  try{
-    const res = await fetch(baseUrl()+"?select=*&limit=20", {headers:headers()});
-    const data = await res.json();
-    log({status:res.status, data});
-  }catch(e){log("Select error: " + e.message);}
-}
-
-async function updateRecord(){
-  try{
-    const id = document.getElementById("recordId").value.trim();
-    if(!id){log("Please enter Record ID.");return;}
-    const payload = JSON.parse(document.getElementById("payload").value);
-    const res = await fetch(baseUrl()+"?id=eq."+encodeURIComponent(id), {method:"PATCH", headers:headers(), body:JSON.stringify(payload)});
-    const data = await res.json();
-    log({status:res.status, data});
-  }catch(e){log("Update error: " + e.message);}
-}
-
-async function deleteRecord(){
-  try{
-    const id = document.getElementById("recordId").value.trim();
-    if(!id){log("Please enter Record ID.");return;}
-    const res = await fetch(baseUrl()+"?id=eq."+encodeURIComponent(id), {method:"DELETE", headers:headers()});
-    let data = "";
-    try{data = await res.json();}catch(_){}
-    log({status:res.status, data});
-  }catch(e){log("Delete error: " + e.message);}
-}
-
-function saveLocal(){
-  try{
-    const table = document.getElementById("table").value;
-    const payload = JSON.parse(document.getElementById("payload").value);
-    localRecords.unshift({table, payload, created_at:new Date().toLocaleString("en-IN")});
-    localStorage.setItem("mh_phase16_local", JSON.stringify(localRecords));
-    renderLocal();
-    log("Saved to local fallback.");
-  }catch(e){log("Local save error: " + e.message);}
-}
-
-function renderLocal(){
-  let html = "<tr><th>Time</th><th>Table</th><th>Payload</th></tr>";
-  localRecords.forEach(r=>{
-    html += `<tr><td>${r.created_at}</td><td>${r.table}</td><td><pre>${JSON.stringify(r.payload,null,2)}</pre></td></tr>`;
-  });
-  document.getElementById("localTable").innerHTML = html;
-}
-
-loadConfig();
 </script>
 
 </body>
