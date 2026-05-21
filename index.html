@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MediaHub Phase 25 WhatsApp Automation</title>
+<title>MediaHub Phase 26 AI Reports</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:18px}
@@ -15,11 +15,11 @@ body{margin:0;background:#050506;color:#fff;font-family:Arial}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
 input,select,textarea{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
-textarea{min-height:90px}
+textarea{min-height:100px}
 button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;color:#111;cursor:pointer}
 .badge{padding:5px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#22c55e20;color:#22c55e}
 .orange{background:#ff6b0020;color:#ff6b00}
-.blue{background:#38bdf820;color:#38bdf8}
+.reportbox{background:#0b0b0b;border:1px solid #333;border-radius:12px;padding:16px;white-space:pre-line}
 </style>
 </head>
 <body>
@@ -27,44 +27,41 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 25 - WhatsApp Automation ERP</h1>
-<p>WATI-ready notifications + client updates + automation center</p>
+<h1>Phase 26 - AI Reporting Engine</h1>
+<p>AI summaries + productivity reports + smart insights</p>
 </div>
 
 <div class="grid" id="stats"></div>
 
 <div class="card">
 
-<h2>Create WhatsApp Automation</h2>
+<h2>Create AI Report Entry</h2>
 
 <table>
 <tr>
-<td><input id="client" placeholder="Client Name"></td>
-<td><input id="phone" placeholder="WhatsApp Number"></td>
+<td><input id="department" placeholder="Department"></td>
+
 <td>
 <select id="type">
-<option>Order Update</option>
-<option>Dispatch Alert</option>
-<option>Invoice Reminder</option>
-<option>Payment Followup</option>
-<option>Execution Completed</option>
+<option>Daily Productivity</option>
+<option>Execution Summary</option>
+<option>Sales Summary</option>
+<option>Accounts Summary</option>
+<option>Operations Alert</option>
 </select>
 </td>
-<td>
-<select id="status">
-<option>Pending</option>
-<option>Sent</option>
-<option>Failed</option>
-</select>
-</td>
+
+<td><input id="target" type="number" placeholder="Target"></td>
+<td><input id="achieved" type="number" placeholder="Achieved"></td>
 </tr>
 
 <tr>
 <td colspan="3">
-<textarea id="message" placeholder="WhatsApp message template"></textarea>
+<textarea id="notes" placeholder="AI Notes / Summary"></textarea>
 </td>
+
 <td>
-<button onclick="saveAutomation()">Save Automation</button>
+<button onclick="saveReport()">Generate Report</button>
 </td>
 </tr>
 </table>
@@ -72,134 +69,134 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 </div>
 
 <div class="card">
-<h2>Automation Queue</h2>
-<table id="queueTable"></table>
+<h2>Generated AI Reports</h2>
+<table id="reportTable"></table>
 </div>
 
 <div class="card">
-<h2>WATI API Structure</h2>
-
-<table>
-<tr>
-<th>Setting</th>
-<th>Value</th>
-</tr>
-
-<tr>
-<td>API Endpoint</td>
-<td>https://live-server.wati.io/api/v1/sendTemplateMessage</td>
-</tr>
-
-<tr>
-<td>Authorization</td>
-<td>Bearer YOUR_WATI_TOKEN</td>
-</tr>
-
-<tr>
-<td>Method</td>
-<td>POST</td>
-</tr>
-
-<tr>
-<td>Payload</td>
-<td>phoneNumber + templateName + broadcastName</td>
-</tr>
-
-</table>
-
-</div>
-
-<div class="card">
-<h2>Automation Summary</h2>
-<div id="summary"></div>
+<h2>AI Smart Summary</h2>
+<div id="summary" class="reportbox"></div>
 </div>
 
 </div>
 
 <script>
 
-let automations = JSON.parse(localStorage.getItem("mh25_automations") || "[]");
+let reports = JSON.parse(localStorage.getItem("mh26_reports") || "[]");
 
 function save(){
-localStorage.setItem("mh25_automations", JSON.stringify(automations));
+localStorage.setItem("mh26_reports", JSON.stringify(reports));
 }
 
-function saveAutomation(){
+function saveReport(){
+
+let target = Number(document.getElementById("target").value || 0);
+let achieved = Number(document.getElementById("achieved").value || 0);
+
+let efficiency = target ? Math.round((achieved/target)*100) : 0;
+
+let aiStatus = efficiency >= 90
+? "Excellent Performance"
+: efficiency >= 70
+? "Good Performance"
+: efficiency >= 40
+? "Average Performance"
+: "Critical Performance";
 
 let item = {
-id:"WA-"+Date.now(),
-client:document.getElementById("client").value,
-phone:document.getElementById("phone").value,
+id:"AIR-"+Date.now(),
+department:document.getElementById("department").value,
 type:document.getElementById("type").value,
-status:document.getElementById("status").value,
-message:document.getElementById("message").value,
+target:target,
+achieved:achieved,
+efficiency:efficiency,
+status:aiStatus,
+notes:document.getElementById("notes").value,
 time:new Date().toLocaleString("en-IN")
 };
 
-automations.unshift(item);
+reports.unshift(item);
 
 save();
 
 render();
 
-alert("Automation Saved");
+alert("AI Report Generated");
 
 }
 
 function render(){
 
-let total = automations.length;
-let sent = automations.filter(x=>x.status==="Sent").length;
-let pending = automations.filter(x=>x.status==="Pending").length;
-let failed = automations.filter(x=>x.status==="Failed").length;
+let total = reports.length;
+let excellent = reports.filter(x=>x.status==="Excellent Performance").length;
+let critical = reports.filter(x=>x.status==="Critical Performance").length;
 
 document.getElementById("stats").innerHTML = `
-<div class="stat"><h3>Total Automations</h3><h1>${total}</h1></div>
-<div class="stat"><h3>Sent</h3><h1>${sent}</h1></div>
-<div class="stat"><h3>Pending</h3><h1>${pending}</h1></div>
-<div class="stat"><h3>Failed</h3><h1>${failed}</h1></div>
+<div class="stat"><h3>Total Reports</h3><h1>${total}</h1></div>
+<div class="stat"><h3>Excellent</h3><h1>${excellent}</h1></div>
+<div class="stat"><h3>Critical</h3><h1>${critical}</h1></div>
 `;
 
 let html = `
 <tr>
-<th>Client</th>
-<th>Phone</th>
+<th>Department</th>
 <th>Type</th>
+<th>Efficiency</th>
 <th>Status</th>
-<th>Message</th>
 <th>Time</th>
 </tr>`;
 
-automations.forEach(a=>{
+reports.forEach(r=>{
 
-let cls = a.status==="Pending" ? "orange" : a.status==="Failed" ? "blue" : "";
+let cls = r.status === "Critical Performance"
+? "orange"
+: "";
 
 html += `
 <tr>
-<td>${a.client}</td>
-<td>${a.phone}</td>
-<td>${a.type}</td>
-<td><span class="badge ${cls}">${a.status}</span></td>
-<td>${a.message}</td>
-<td>${a.time}</td>
+<td>${r.department}</td>
+<td>${r.type}</td>
+<td>${r.efficiency}%</td>
+<td><span class="badge ${cls}">${r.status}</span></td>
+<td>${r.time}</td>
 </tr>`;
 
 });
 
-document.getElementById("queueTable").innerHTML = html;
+document.getElementById("reportTable").innerHTML = html;
 
-document.getElementById("summary").innerHTML = `
-<h2>Automation Summary</h2>
+if(reports.length){
 
-<p><b>Total Queue:</b> ${total}</p>
-<p><b>Messages Sent:</b> ${sent}</p>
-<p><b>Pending Queue:</b> ${pending}</p>
-<p><b>Failed Queue:</b> ${failed}</p>
+let latest = reports[0];
 
-<p>
-Ready for WATI integration, invoice reminders, dispatch updates and client automation workflows.
-</p>
+document.getElementById("summary").innerText = `
+AI REPORT SUMMARY
+
+Department: ${latest.department}
+Report Type: ${latest.type}
+
+Target: ${latest.target}
+Achieved: ${latest.achieved}
+
+Efficiency: ${latest.efficiency}%
+
+AI Status:
+${latest.status}
+
+AI Notes:
+${latest.notes}
+
+AI Recommendation:
+${latest.efficiency < 70
+? "Increase productivity, improve workflow and monitor execution closely."
+: "Department performance is healthy and operational flow is stable."
+}
+
+Generated:
+${latest.time}
 `;
+
+}
 
 }
 
