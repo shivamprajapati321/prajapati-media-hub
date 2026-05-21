@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MediaHub Phase 24 Inventory ERP</title>
+<title>MediaHub Phase 25 WhatsApp Automation</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:18px}
@@ -14,11 +14,12 @@ body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .stat h1{margin:0;color:#ff6b00}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
-input,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
+input,select,textarea{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
+textarea{min-height:90px}
 button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;color:#111;cursor:pointer}
 .badge{padding:5px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#22c55e20;color:#22c55e}
 .orange{background:#ff6b0020;color:#ff6b00}
-.red{background:#ef444420;color:#ef4444}
+.blue{background:#38bdf820;color:#38bdf8}
 </style>
 </head>
 <body>
@@ -26,82 +27,90 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 24 - Inventory + Raw Material ERP</h1>
-<p>Stock management + inward/outward + low stock alerts</p>
+<h1>Phase 25 - WhatsApp Automation ERP</h1>
+<p>WATI-ready notifications + client updates + automation center</p>
 </div>
 
 <div class="grid" id="stats"></div>
 
 <div class="card">
 
-<h2>Add Inventory Item</h2>
+<h2>Create WhatsApp Automation</h2>
 
 <table>
 <tr>
-<td><input id="item" placeholder="Item Name"></td>
-
+<td><input id="client" placeholder="Client Name"></td>
+<td><input id="phone" placeholder="WhatsApp Number"></td>
 <td>
-<select id="category">
-<option>Rexin</option>
-<option>Ink</option>
-<option>Flex Roll</option>
-<option>Vinyl</option>
-<option>Accessories</option>
+<select id="type">
+<option>Order Update</option>
+<option>Dispatch Alert</option>
+<option>Invoice Reminder</option>
+<option>Payment Followup</option>
+<option>Execution Completed</option>
 </select>
 </td>
+<td>
+<select id="status">
+<option>Pending</option>
+<option>Sent</option>
+<option>Failed</option>
+</select>
+</td>
+</tr>
 
-<td><input id="vendor" placeholder="Vendor"></td>
-
-<td><input id="stock" type="number" placeholder="Current Stock"></td>
-
-<td><button onclick="saveItem()">Save Item</button></td>
+<tr>
+<td colspan="3">
+<textarea id="message" placeholder="WhatsApp message template"></textarea>
+</td>
+<td>
+<button onclick="saveAutomation()">Save Automation</button>
+</td>
 </tr>
 </table>
 
 </div>
 
 <div class="card">
+<h2>Automation Queue</h2>
+<table id="queueTable"></table>
+</div>
 
-<h2>Stock Movement</h2>
+<div class="card">
+<h2>WATI API Structure</h2>
 
 <table>
 <tr>
-
-<td>
-<select id="moveItem"></select>
-</td>
-
-<td>
-<select id="moveType">
-<option>Inward</option>
-<option>Outward</option>
-<option>Consumption</option>
-</select>
-</td>
-
-<td><input id="qty" type="number" placeholder="Qty"></td>
-
-<td><input id="remarks" placeholder="Remarks"></td>
-
-<td><button onclick="saveMovement()">Save Entry</button></td>
-
+<th>Setting</th>
+<th>Value</th>
 </tr>
+
+<tr>
+<td>API Endpoint</td>
+<td>https://live-server.wati.io/api/v1/sendTemplateMessage</td>
+</tr>
+
+<tr>
+<td>Authorization</td>
+<td>Bearer YOUR_WATI_TOKEN</td>
+</tr>
+
+<tr>
+<td>Method</td>
+<td>POST</td>
+</tr>
+
+<tr>
+<td>Payload</td>
+<td>phoneNumber + templateName + broadcastName</td>
+</tr>
+
 </table>
 
 </div>
 
 <div class="card">
-<h2>Inventory Stock</h2>
-<table id="inventoryTable"></table>
-</div>
-
-<div class="card">
-<h2>Stock Movement Reports</h2>
-<table id="movementTable"></table>
-</div>
-
-<div class="card">
-<h2>Inventory Summary</h2>
+<h2>Automation Summary</h2>
 <div id="summary"></div>
 </div>
 
@@ -109,154 +118,86 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 
 <script>
 
-let inventory = JSON.parse(localStorage.getItem("mh24_inventory") || "[]");
-let movements = JSON.parse(localStorage.getItem("mh24_movements") || "[]");
+let automations = JSON.parse(localStorage.getItem("mh25_automations") || "[]");
 
 function save(){
-localStorage.setItem("mh24_inventory", JSON.stringify(inventory));
-localStorage.setItem("mh24_movements", JSON.stringify(movements));
+localStorage.setItem("mh25_automations", JSON.stringify(automations));
 }
 
-function saveItem(){
+function saveAutomation(){
 
 let item = {
-id:"INV-"+Date.now(),
-name:document.getElementById("item").value,
-category:document.getElementById("category").value,
-vendor:document.getElementById("vendor").value,
-stock:Number(document.getElementById("stock").value || 0)
+id:"WA-"+Date.now(),
+client:document.getElementById("client").value,
+phone:document.getElementById("phone").value,
+type:document.getElementById("type").value,
+status:document.getElementById("status").value,
+message:document.getElementById("message").value,
+time:new Date().toLocaleString("en-IN")
 };
 
-inventory.unshift(item);
+automations.unshift(item);
 
 save();
 
 render();
 
-alert("Inventory Item Saved");
-
-}
-
-function saveMovement(){
-
-let itemId = document.getElementById("moveItem").value;
-
-let inv = inventory.find(x=>x.id===itemId);
-
-if(!inv){
-alert("Select item");
-return;
-}
-
-let type = document.getElementById("moveType").value;
-let qty = Number(document.getElementById("qty").value || 0);
-
-if(type === "Inward"){
-inv.stock += qty;
-}
-else{
-inv.stock -= qty;
-if(inv.stock < 0){
-inv.stock = 0;
-}
-}
-
-movements.unshift({
-id:"MOV-"+Date.now(),
-item:inv.name,
-type:type,
-qty:qty,
-remarks:document.getElementById("remarks").value,
-time:new Date().toLocaleString("en-IN")
-});
-
-save();
-
-render();
-
-alert("Stock Movement Saved");
+alert("Automation Saved");
 
 }
 
 function render(){
 
-let totalItems = inventory.length;
-let lowStock = inventory.filter(x=>x.stock <= 20).length;
-let totalStock = inventory.reduce((a,x)=>a+x.stock,0);
+let total = automations.length;
+let sent = automations.filter(x=>x.status==="Sent").length;
+let pending = automations.filter(x=>x.status==="Pending").length;
+let failed = automations.filter(x=>x.status==="Failed").length;
 
 document.getElementById("stats").innerHTML = `
-<div class="stat"><h3>Total Items</h3><h1>${totalItems}</h1></div>
-<div class="stat"><h3>Total Stock</h3><h1>${totalStock}</h1></div>
-<div class="stat"><h3>Low Stock Alerts</h3><h1>${lowStock}</h1></div>
+<div class="stat"><h3>Total Automations</h3><h1>${total}</h1></div>
+<div class="stat"><h3>Sent</h3><h1>${sent}</h1></div>
+<div class="stat"><h3>Pending</h3><h1>${pending}</h1></div>
+<div class="stat"><h3>Failed</h3><h1>${failed}</h1></div>
 `;
 
-document.getElementById("moveItem").innerHTML = inventory.map(i=>`
-<option value="${i.id}">${i.name}</option>
-`).join("");
-
-let invHtml = `
+let html = `
 <tr>
-<th>Item</th>
-<th>Category</th>
-<th>Vendor</th>
-<th>Stock</th>
-<th>Status</th>
-</tr>`;
-
-inventory.forEach(i=>{
-
-let cls = i.stock <= 20 ? "red" : "";
-
-invHtml += `
-<tr>
-<td>${i.name}</td>
-<td>${i.category}</td>
-<td>${i.vendor}</td>
-<td>${i.stock}</td>
-<td><span class="badge ${cls}">${i.stock <= 20 ? "Low Stock" : "Available"}</span></td>
-</tr>`;
-
-});
-
-document.getElementById("inventoryTable").innerHTML = invHtml;
-
-let movHtml = `
-<tr>
-<th>Item</th>
+<th>Client</th>
+<th>Phone</th>
 <th>Type</th>
-<th>Qty</th>
-<th>Remarks</th>
+<th>Status</th>
+<th>Message</th>
 <th>Time</th>
 </tr>`;
 
-movements.forEach(m=>{
+automations.forEach(a=>{
 
-let cls = m.type === "Outward" || m.type === "Consumption"
-? "orange"
-: "";
+let cls = a.status==="Pending" ? "orange" : a.status==="Failed" ? "blue" : "";
 
-movHtml += `
+html += `
 <tr>
-<td>${m.item}</td>
-<td><span class="badge ${cls}">${m.type}</span></td>
-<td>${m.qty}</td>
-<td>${m.remarks}</td>
-<td>${m.time}</td>
+<td>${a.client}</td>
+<td>${a.phone}</td>
+<td>${a.type}</td>
+<td><span class="badge ${cls}">${a.status}</span></td>
+<td>${a.message}</td>
+<td>${a.time}</td>
 </tr>`;
 
 });
 
-document.getElementById("movementTable").innerHTML = movHtml;
+document.getElementById("queueTable").innerHTML = html;
 
 document.getElementById("summary").innerHTML = `
-<h2>Inventory Summary</h2>
+<h2>Automation Summary</h2>
 
-<p><b>Total Inventory Items:</b> ${totalItems}</p>
-<p><b>Total Stock Units:</b> ${totalStock}</p>
-<p><b>Low Stock Alerts:</b> ${lowStock}</p>
+<p><b>Total Queue:</b> ${total}</p>
+<p><b>Messages Sent:</b> ${sent}</p>
+<p><b>Pending Queue:</b> ${pending}</p>
+<p><b>Failed Queue:</b> ${failed}</p>
 
 <p>
-Inventory engine ready for production stock deduction and purchase tracking.
+Ready for WATI integration, invoice reminders, dispatch updates and client automation workflows.
 </p>
 `;
 
