@@ -1,66 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Media Hub Admin</title>
-<link rel="stylesheet" href="styles.css">
+  <title>Media Hub - Phase 1 Location Orders</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-<div class="sidebar">
-  <div class="logo">MEDIAHUB</div>
-  <button onclick="showPage('dashboard')">Dashboard</button>
-  <button onclick="showPage('orders')">Orders</button>
-  <button onclick="showPage('approval')">Approval</button>
-  <button onclick="showPage('printing')">Printing</button>
-  <button onclick="showPage('stitching')">Stitching</button>
-  <button onclick="showPage('dispatch')">Dispatch</button>
-  <button onclick="showPage('execution')">Execution</button>
-  <button onclick="showPage('accounts')">Accounts</button>
-</div>
-
-<div class="main">
-  <div id="dashboard" class="page active">
-    <h1>Admin Dashboard</h1>
-    <div class="cards">
-      <div class="card"><h2>Total Orders</h2><p>53</p></div>
-      <div class="card"><h2>Pending</h2><p>37</p></div>
-      <div class="card"><h2>Execution</h2><p>641</p></div>
-      <div class="card"><h2>Revenue</h2><p>₹1,48,19,843</p></div>
-    </div>
-  </div>
-
-  <div id="orders" class="page">
-    <h1>Real Order Create</h1>
-    <div class="form-grid">
-      <input placeholder="Company Name">
-      <input placeholder="Person Name">
-      <input placeholder="Contact Number">
-      <input placeholder="Lead Source">
-      <input placeholder="Multiple Cities">
-      <input placeholder="Quantity">
-      <input placeholder="Rate Per PCS">
-      <input placeholder="GST Number">
-    </div>
-    <button class="orange-btn">Create Order</button>
-  </div>
-
-  <div id="approval" class="page">
-    <h1>Admin Approval</h1>
-    <div class="table-box">
-      <table>
-        <tr><th>Order</th><th>Company</th><th>Status</th></tr>
-        <tr><td>ORD-63974</td><td>Apar</td><td>Pending</td></tr>
-      </table>
-    </div>
-  </div>
-
-  <div id="printing" class="page"><h1>Printing Module</h1></div>
-  <div id="stitching" class="page"><h1>Stitching Module</h1></div>
-  <div id="dispatch" class="page"><h1>Dispatch Module</h1></div>
-  <div id="execution" class="page"><h1>Execution Module</h1></div>
-  <div id="accounts" class="page"><h1>Accounts Module</h1></div>
-</div>
-
-<script src="app.js"></script>
+  <div id="app"></div>
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>
