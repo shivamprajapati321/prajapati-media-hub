@@ -2,14 +2,15 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>MediaHub Phase 15 Live Sync</title>
+<title>MediaHub Phase 16 CRUD Console</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:20px}
 .card{background:#111;border:1px solid #333;border-radius:16px;padding:20px;margin-bottom:20px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 input,textarea,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
-button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+textarea{min-height:140px;font-family:monospace}
+button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;cursor:pointer;margin:4px 4px 4px 0}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #333;text-align:left;vertical-align:top}
 .badge{background:#22c55e20;color:#22c55e;padding:5px 10px;border-radius:999px;font-size:12px}
@@ -23,12 +24,12 @@ pre{background:#0b0b0b;border:1px solid #333;border-radius:12px;padding:14px;ove
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 15 - Live Sync Engine</h1>
-<p>Supabase CRUD-ready structure + sync controls + API layer planning</p>
+<h1>Phase 16 - Supabase CRUD Console</h1>
+<p>Live API Testing Console + Local Fallback + Table Payload Editor</p>
 </div>
 
 <div class="card">
-<h2>Supabase Config</h2>
+<h2>Supabase Connection</h2>
 
 <div class="grid">
 <div>
@@ -38,12 +39,12 @@ pre{background:#0b0b0b;border:1px solid #333;border-radius:12px;padding:14px;ove
 
 <div>
 <label>Anon Public Key</label>
-<input id="key" placeholder="Paste anon key">
+<input id="key" placeholder="Paste anon public key">
 </div>
 
 <div>
-<label>Default Table</label>
-<select id="table">
+<label>Table</label>
+<select id="table" onchange="loadTemplate()">
 <option>orders</option>
 <option>users</option>
 <option>order_locations</option>
@@ -57,178 +58,158 @@ pre{background:#0b0b0b;border:1px solid #333;border-radius:12px;padding:14px;ove
 </div>
 
 <div>
-<label>Mode</label>
-<select id="mode">
-<option>Local Demo</option>
-<option>Supabase Ready</option>
-</select>
+<label>Record ID For Update/Delete</label>
+<input id="recordId" placeholder="uuid or id">
 </div>
 </div>
 
 <br>
 <button onclick="saveConfig()">Save Config</button>
-<button onclick="testConnection()">Test Connection UI</button>
+<button onclick="testSelect()">Test Select</button>
 </div>
 
 <div class="card">
-<h2>Create Test Order</h2>
-
-<div class="grid">
-<div><label>Company</label><input id="company"></div>
-<div><label>Media</label><input id="media" value="Auto Rickshaw Hood Branding"></div>
-<div><label>City</label><input id="city"></div>
-<div><label>Qty</label><input id="qty" type="number"></div>
-<div><label>Amount</label><input id="amount" type="number"></div>
-<div><label>Status</label><select id="status"><option>New</option><option>Approved</option><option>Printing</option><option>Execution</option><option>Done</option></select></div>
-</div>
-
+<h2>Payload Editor</h2>
+<textarea id="payload"></textarea>
 <br>
-<button onclick="createLocalOrder()">Create Local Order</button>
-<button onclick="exportJson()">Export JSON Backup</button>
+<button onclick="insertRecord()">Insert Record</button>
+<button onclick="selectRecords()">Select Records</button>
+<button onclick="updateRecord()">Update Record</button>
+<button onclick="deleteRecord()">Delete Record</button>
+<button onclick="saveLocal()">Save Local Fallback</button>
 </div>
 
 <div class="card">
-<h2>Local Orders / Sync Preview</h2>
-<table id="ordersTable">
-<tr>
-<th>Order</th>
-<th>Company</th>
-<th>Media</th>
-<th>City</th>
-<th>Qty</th>
-<th>Amount</th>
-<th>Status</th>
-</tr>
-</table>
+<h2>Result / Logs</h2>
+<pre id="log">Ready.</pre>
 </div>
 
 <div class="card">
-<h2>API Layer Code For Later</h2>
-<pre>
-async function supabaseInsert(table, data){
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-    method: "POST",
-    headers: {
-      "apikey": SUPABASE_ANON_KEY,
-      "Authorization": "Bearer " + SUPABASE_ANON_KEY,
-      "Content-Type": "application/json",
-      "Prefer": "return=representation"
-    },
-    body: JSON.stringify(data)
-  });
-  return await response.json();
-}
-
-async function supabaseSelect(table){
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*`, {
-    headers: {
-      "apikey": SUPABASE_ANON_KEY,
-      "Authorization": "Bearer " + SUPABASE_ANON_KEY
-    }
-  });
-  return await response.json();
-}
-</pre>
+<h2>Local Fallback Records</h2>
+<table id="localTable"></table>
 </div>
-
-<div class="card" id="summary"></div>
 
 </div>
 
 <script>
-let cloud = JSON.parse(localStorage.getItem("mh_cloud_config") || "{}");
-let orders = JSON.parse(localStorage.getItem("mh_phase15_orders") || "[]");
+let config = JSON.parse(localStorage.getItem("mh_phase16_config") || "{}");
+let localRecords = JSON.parse(localStorage.getItem("mh_phase16_local") || "[]");
 
-function saveConfig(){
-  cloud = {
-    url: document.getElementById("url").value,
-    key: document.getElementById("key").value,
-    table: document.getElementById("table").value,
-    mode: document.getElementById("mode").value
-  };
-  localStorage.setItem("mh_cloud_config", JSON.stringify(cloud));
-  renderSummary("Config saved locally.");
+const templates = {
+orders:{order_no:"ORD-1001",company:"Demo Company",person:"Contact Person",contact:"9999999999",media:"Auto Rickshaw Hood Branding",total_qty:100,final_amount:50000,status:"New"},
+users:{name:"Admin User",phone:"9922138138",role:"Admin",status:"active"},
+order_locations:{order_id:"ORDER_UUID_HERE",location:"Pune",qty:100,design_type:"Same Design",design_file:""},
+design_tasks:{order_id:"ORDER_UUID_HERE",designer:"Designer Name",status:"Pending",client_approval:"Pending"},
+printing_jobs:{order_id:"ORDER_UUID_HERE",operator:"Operator Name",machine:"Machine 1",total_qty:100,printed_qty:0,ink_used:"",roll_used:"",status:"Pending"},
+stitching_entries:{order_id:"ORDER_UUID_HERE",worker:"Worker Name",qty:10,payment_type:"Monthly",amount:0,ot_amount:0},
+dispatch_entries:{order_id:"ORDER_UUID_HERE",dispatch_type:"Team Dispatch",team_or_party:"Team A",bundles:2,pcs:100,vendor:"Vendor Name",lr_number:""},
+execution_photos:{order_id:"ORDER_UUID_HERE",vehicle_no:"MH12AB1234",gps:"18.5204,73.8567",photo_url:"",ocr_status:"Manual Verify"},
+accounts_entries:{order_id:"ORDER_UUID_HERE",type:"Income",amount:50000,mode:"Bank",status:"Paid"}
+};
+
+function log(x){
+  document.getElementById("log").textContent = typeof x==="string" ? x : JSON.stringify(x,null,2);
 }
 
 function loadConfig(){
-  document.getElementById("url").value = cloud.url || "";
-  document.getElementById("key").value = cloud.key || "";
-  document.getElementById("table").value = cloud.table || "orders";
-  document.getElementById("mode").value = cloud.mode || "Local Demo";
-  renderTable();
-  renderSummary("Ready.");
+  document.getElementById("url").value = config.url || "";
+  document.getElementById("key").value = config.key || "";
+  document.getElementById("table").value = config.table || "orders";
+  loadTemplate();
+  renderLocal();
 }
 
-function testConnection(){
-  if(!document.getElementById("url").value || !document.getElementById("key").value){
-    renderSummary("Missing Supabase URL or Key.");
-    return;
-  }
-  renderSummary("Connection UI ready. Next production step: enable live fetch/insert after RLS policies are created.");
-}
-
-function createLocalOrder(){
-  const order = {
-    order_no: "ORD-" + Date.now(),
-    company: document.getElementById("company").value,
-    media: document.getElementById("media").value,
-    city: document.getElementById("city").value,
-    qty: Number(document.getElementById("qty").value || 0),
-    amount: Number(document.getElementById("amount").value || 0),
-    status: document.getElementById("status").value
+function saveConfig(){
+  config = {
+    url:document.getElementById("url").value.trim(),
+    key:document.getElementById("key").value.trim(),
+    table:document.getElementById("table").value
   };
-
-  orders.unshift(order);
-  localStorage.setItem("mh_phase15_orders", JSON.stringify(orders));
-  renderTable();
-  renderSummary("Local order created. Use this structure for Supabase insert.");
+  localStorage.setItem("mh_phase16_config", JSON.stringify(config));
+  log("Config saved locally.");
 }
 
-function renderTable(){
-  let html = `
-  <tr>
-  <th>Order</th>
-  <th>Company</th>
-  <th>Media</th>
-  <th>City</th>
-  <th>Qty</th>
-  <th>Amount</th>
-  <th>Status</th>
-  </tr>`;
+function loadTemplate(){
+  const table = document.getElementById("table").value;
+  document.getElementById("payload").value = JSON.stringify(templates[table], null, 2);
+}
 
-  orders.forEach(o=>{
-    html += `
-    <tr>
-    <td>${o.order_no}</td>
-    <td>${o.company}</td>
-    <td>${o.media}</td>
-    <td>${o.city}</td>
-    <td>${o.qty}</td>
-    <td>₹${Number(o.amount).toLocaleString("en-IN")}</td>
-    <td><span class="badge orange">${o.status}</span></td>
-    </tr>`;
+function headers(){
+  const key = document.getElementById("key").value.trim();
+  return {
+    "apikey": key,
+    "Authorization": "Bearer " + key,
+    "Content-Type": "application/json",
+    "Prefer": "return=representation"
+  };
+}
+
+function baseUrl(){
+  const url = document.getElementById("url").value.trim().replace(/\\/$/,"");
+  const table = document.getElementById("table").value;
+  return url + "/rest/v1/" + table;
+}
+
+async function testSelect(){
+  await selectRecords();
+}
+
+async function insertRecord(){
+  try{
+    const payload = JSON.parse(document.getElementById("payload").value);
+    const res = await fetch(baseUrl(), {method:"POST", headers:headers(), body:JSON.stringify(payload)});
+    const data = await res.json();
+    log({status:res.status, data});
+  }catch(e){log("Insert error: " + e.message);}
+}
+
+async function selectRecords(){
+  try{
+    const res = await fetch(baseUrl()+"?select=*&limit=20", {headers:headers()});
+    const data = await res.json();
+    log({status:res.status, data});
+  }catch(e){log("Select error: " + e.message);}
+}
+
+async function updateRecord(){
+  try{
+    const id = document.getElementById("recordId").value.trim();
+    if(!id){log("Please enter Record ID.");return;}
+    const payload = JSON.parse(document.getElementById("payload").value);
+    const res = await fetch(baseUrl()+"?id=eq."+encodeURIComponent(id), {method:"PATCH", headers:headers(), body:JSON.stringify(payload)});
+    const data = await res.json();
+    log({status:res.status, data});
+  }catch(e){log("Update error: " + e.message);}
+}
+
+async function deleteRecord(){
+  try{
+    const id = document.getElementById("recordId").value.trim();
+    if(!id){log("Please enter Record ID.");return;}
+    const res = await fetch(baseUrl()+"?id=eq."+encodeURIComponent(id), {method:"DELETE", headers:headers()});
+    let data = "";
+    try{data = await res.json();}catch(_){}
+    log({status:res.status, data});
+  }catch(e){log("Delete error: " + e.message);}
+}
+
+function saveLocal(){
+  try{
+    const table = document.getElementById("table").value;
+    const payload = JSON.parse(document.getElementById("payload").value);
+    localRecords.unshift({table, payload, created_at:new Date().toLocaleString("en-IN")});
+    localStorage.setItem("mh_phase16_local", JSON.stringify(localRecords));
+    renderLocal();
+    log("Saved to local fallback.");
+  }catch(e){log("Local save error: " + e.message);}
+}
+
+function renderLocal(){
+  let html = "<tr><th>Time</th><th>Table</th><th>Payload</th></tr>";
+  localRecords.forEach(r=>{
+    html += `<tr><td>${r.created_at}</td><td>${r.table}</td><td><pre>${JSON.stringify(r.payload,null,2)}</pre></td></tr>`;
   });
-
-  document.getElementById("ordersTable").innerHTML = html;
-}
-
-function exportJson(){
-  const blob = new Blob([JSON.stringify({cloud, orders}, null, 2)], {type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "mediahub_phase15_backup.json";
-  a.click();
-}
-
-function renderSummary(msg){
-  document.getElementById("summary").innerHTML = `
-  <h2>Sync Summary</h2>
-  <h3>Status: <span class="badge">${msg}</span></h3>
-  <p>Provider URL: ${document.getElementById("url").value || "Not set"}</p>
-  <p>Default Table: ${document.getElementById("table").value || "orders"}</p>
-  <p>Mode: ${document.getElementById("mode").value || "Local Demo"}</p>
-  <p>Total Local Orders: ${orders.length}</p>
-  `;
+  document.getElementById("localTable").innerHTML = html;
 }
 
 loadConfig();
