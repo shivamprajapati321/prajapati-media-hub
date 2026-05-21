@@ -2,25 +2,27 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>MediaHub Phase 18 Client Portal</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MediaHub Phase 19 Field Panel</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
-.wrap{padding:20px}
-.card{background:#111;border:1px solid #333;border-radius:16px;padding:20px;margin-bottom:20px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-.stat{background:#17181f;border:1px solid #333;border-radius:14px;padding:16px}
-.stat h3{margin:0 0 10px;color:#aaa;font-size:12px}
-.stat h1{margin:0;color:#ff6b00}
+.wrap{padding:14px;max-width:900px;margin:auto}
+.card{background:#111;border:1px solid #333;border-radius:16px;padding:16px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input,select,textarea{padding:12px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:10px;width:100%}
+button{padding:12px 16px;background:#ff6b00;border:none;border-radius:10px;font-weight:700;color:#111;cursor:pointer}
 table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #333;text-align:left;vertical-align:top}
-button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;cursor:pointer}
-input,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
-.badge{padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#22c55e20;color:#22c55e}
+th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
+.badge{padding:5px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#22c55e20;color:#22c55e}
 .orange{background:#ff6b0020;color:#ff6b00}
-.blue{background:#38bdf820;color:#38bdf8}
-.progress{height:10px;background:#242424;border-radius:999px;overflow:hidden}
-.bar{height:100%;background:#ff6b00}
-.report{background:#0b0b0b;border:1px solid #333;border-radius:12px;padding:14px;margin-top:12px}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.stat{background:#17181f;border:1px solid #333;border-radius:14px;padding:14px}
+.stat h3{margin:0 0 8px;color:#aaa;font-size:11px}
+.stat h1{margin:0;color:#ff6b00}
+.timeline{border-left:2px solid #333;padding-left:12px}
+.event{margin-bottom:14px}
+small{color:#999}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -28,151 +30,171 @@ input,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;bo
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 18 - Client Portal + Reporting Center</h1>
-<p>Client live status + campaign progress + report download structure</p>
+<h1>Phase 19 - Mobile Field Execution Panel</h1>
+<p>Field team check-in + GPS attendance + route progress</p>
 </div>
 
-<div class="card">
-<h2>Create Client Campaign View</h2>
+<div class="statgrid" id="stats"></div>
 
-<table>
-<tr>
-<td><input id="client" placeholder="Client / Company Name"></td>
-<td><input id="campaign" placeholder="Campaign Name"></td>
-<td><input id="city" placeholder="City"></td>
-<td><input id="qty" type="number" placeholder="Total Qty"></td>
-</tr>
-<tr>
-<td><input id="done" type="number" placeholder="Completed Qty"></td>
-<td>
+<div class="card">
+<h2>Team Check-In</h2>
+
+<div class="grid">
+<div>
+<label>Team Name</label>
+<input id="team">
+</div>
+
+<div>
+<label>Campaign</label>
+<input id="campaign">
+</div>
+
+<div>
+<label>City</label>
+<input id="city">
+</div>
+
+<div>
+<label>GPS Location</label>
+<input id="gps" placeholder="18.5204,73.8567">
+</div>
+
+<div>
+<label>Vehicle Number</label>
+<input id="vehicle">
+</div>
+
+<div>
+<label>Status</label>
 <select id="status">
-<option>Printing</option>
-<option>Stitching</option>
-<option>Dispatch</option>
-<option>Execution</option>
+<option>Checked In</option>
+<option>On Route</option>
+<option>Execution Running</option>
 <option>Completed</option>
 </select>
-</td>
-<td><input id="photos" type="number" placeholder="Proof Photos"></td>
-<td><button onclick="saveCampaign()">Save Campaign</button></td>
-</tr>
-</table>
 </div>
 
-<div class="grid" id="stats"></div>
+<div>
+<label>Photo Count</label>
+<select id="photos">
+<option>1</option>
+<option>3</option>
+<option>5</option>
+</select>
+</div>
 
-<div class="card">
-<h2>Client Campaign Dashboard</h2>
-<table id="campaignTable"></table>
+<div>
+<label>OCR</label>
+<select id="ocr">
+<option>Matched</option>
+<option>Manual Verify</option>
+</select>
+</div>
+</div>
+
+<br>
+
+<button onclick="saveEntry()">Save Field Entry</button>
+
 </div>
 
 <div class="card">
-<h2>Client Report Preview</h2>
-<div id="reportBox" class="report">Select / create campaign to view report.</div>
+<h2>Live Field Entries</h2>
+<table id="entryTable"></table>
+</div>
+
+<div class="card">
+<h2>Activity Timeline</h2>
+<div class="timeline" id="timeline"></div>
 </div>
 
 </div>
 
 <script>
-let campaigns = JSON.parse(localStorage.getItem("mh18_campaigns") || "[]");
+let entries = JSON.parse(localStorage.getItem("mh19_entries") || "[]");
 
 function save(){
-localStorage.setItem("mh18_campaigns", JSON.stringify(campaigns));
+localStorage.setItem("mh19_entries", JSON.stringify(entries));
 }
 
-function pct(c){
-let q=Number(c.qty||0), d=Number(c.done||0);
-return q ? Math.min(100, Math.round((d/q)*100)) : 0;
+function renderStats(){
+let total = entries.length;
+let completed = entries.filter(x=>x.status==="Completed").length;
+let running = entries.filter(x=>x.status==="Execution Running").length;
+let teams = [...new Set(entries.map(x=>x.team))].length;
+
+document.getElementById("stats").innerHTML = `
+<div class="stat"><h3>Total Entries</h3><h1>${total}</h1></div>
+<div class="stat"><h3>Completed</h3><h1>${completed}</h1></div>
+<div class="stat"><h3>Running</h3><h1>${running}</h1></div>
+<div class="stat"><h3>Active Teams</h3><h1>${teams}</h1></div>
+`;
 }
 
-function saveCampaign(){
+function saveEntry(){
 let item = {
-id:"CMP-"+Date.now(),
-client:document.getElementById("client").value,
+id:"FLD-"+Date.now(),
+team:document.getElementById("team").value,
 campaign:document.getElementById("campaign").value,
 city:document.getElementById("city").value,
-qty:Number(document.getElementById("qty").value||0),
-done:Number(document.getElementById("done").value||0),
+gps:document.getElementById("gps").value,
+vehicle:document.getElementById("vehicle").value,
 status:document.getElementById("status").value,
-photos:Number(document.getElementById("photos").value||0),
-created:new Date().toLocaleString("en-IN")
+photos:document.getElementById("photos").value,
+ocr:document.getElementById("ocr").value,
+time:new Date().toLocaleString("en-IN")
 };
-campaigns.unshift(item);
+
+entries.unshift(item);
 save();
 render();
-alert("Client Campaign Saved");
+alert("Field Entry Saved");
 }
 
 function render(){
-let total=campaigns.length;
-let qty=campaigns.reduce((a,c)=>a+Number(c.qty||0),0);
-let done=campaigns.reduce((a,c)=>a+Number(c.done||0),0);
-let photos=campaigns.reduce((a,c)=>a+Number(c.photos||0),0);
 
-document.getElementById("stats").innerHTML = `
-<div class="stat"><h3>Campaigns</h3><h1>${total}</h1></div>
-<div class="stat"><h3>Total Qty</h3><h1>${qty}</h1></div>
-<div class="stat"><h3>Completed Qty</h3><h1>${done}</h1></div>
-<div class="stat"><h3>Proof Photos</h3><h1>${photos}</h1></div>
-`;
+renderStats();
 
 let html = `
 <tr>
-<th>Client</th>
+<th>Team</th>
 <th>Campaign</th>
 <th>City</th>
-<th>Qty</th>
-<th>Done</th>
+<th>Vehicle</th>
+<th>GPS</th>
 <th>Status</th>
-<th>Progress</th>
-<th>Report</th>
+<th>OCR</th>
+<th>Time</th>
 </tr>`;
 
-campaigns.forEach(c=>{
-let p=pct(c);
+entries.forEach(e=>{
 html += `
 <tr>
-<td>${c.client}</td>
-<td>${c.campaign}</td>
-<td>${c.city}</td>
-<td>${c.qty}</td>
-<td>${c.done}</td>
-<td><span class="badge orange">${c.status}</span></td>
-<td><div class="progress"><div class="bar" style="width:${p}%"></div></div>${p}%</td>
-<td><button onclick="showReport('${c.id}')">View</button></td>
+<td>${e.team}</td>
+<td>${e.campaign}</td>
+<td>${e.city}</td>
+<td>${e.vehicle}</td>
+<td>${e.gps}</td>
+<td><span class="badge orange">${e.status}</span></td>
+<td>${e.ocr}</td>
+<td>${e.time}</td>
 </tr>`;
 });
 
-document.getElementById("campaignTable").innerHTML = html;
-}
+document.getElementById("entryTable").innerHTML = html;
 
-function showReport(id){
-let c=campaigns.find(x=>x.id===id);
-if(!c)return;
-let p=pct(c);
-document.getElementById("reportBox").innerHTML = `
-<h2>${c.client}</h2>
-<h3>${c.campaign}</h3>
-<p><b>City:</b> ${c.city}</p>
-<p><b>Total Qty:</b> ${c.qty}</p>
-<p><b>Completed:</b> ${c.done}</p>
-<p><b>Status:</b> ${c.status}</p>
-<p><b>Proof Photos:</b> ${c.photos}</p>
-<p><b>Progress:</b> ${p}%</p>
-<div class="progress"><div class="bar" style="width:${p}%"></div></div>
-<br>
-<button onclick="downloadReport('${c.id}')">Download Report Text</button>
-`;
-}
+let tl = "";
+entries.slice(0,20).forEach(e=>{
+tl += `
+<div class="event">
+<h3>${e.team} - ${e.status}</h3>
+<p>${e.campaign} | ${e.city} | Vehicle: ${e.vehicle}</p>
+<small>${e.time}</small>
+</div>`;
+});
 
-function downloadReport(id){
-let c=campaigns.find(x=>x.id===id);
-let text = `Client Report\\n\\nClient: ${c.client}\\nCampaign: ${c.campaign}\\nCity: ${c.city}\\nTotal Qty: ${c.qty}\\nCompleted: ${c.done}\\nStatus: ${c.status}\\nProof Photos: ${c.photos}\\nProgress: ${pct(c)}%`;
-let blob=new Blob([text],{type:"text/plain"});
-let a=document.createElement("a");
-a.href=URL.createObjectURL(blob);
-a.download=c.client.replaceAll(" ","_")+"_report.txt";
-a.click();
+document.getElementById("timeline").innerHTML = tl;
 }
 
 render();
