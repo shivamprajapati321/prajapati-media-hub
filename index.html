@@ -3,122 +3,158 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Phase 10 Dispatch ERP</title>
+<title>Phase 11 Execution GPS ERP</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:20px}
 .card{background:#111;border:1px solid #333;border-radius:16px;padding:20px;margin-bottom:20px}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
-input,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px}
+input,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
 button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.badge{background:#22c55e20;color:#22c55e;padding:5px 10px;border-radius:999px;font-size:12px}
 </style>
 </head>
 <body>
+
 <div class="wrap">
+
 <div class="card">
-<h1>Phase 10 - Dispatch ERP</h1>
-<p>Dispatch + Vendor + Bundle Tracking</p>
+<h1>Phase 11 - Execution GPS ERP</h1>
+<p>Execution Tracking + GPS + OCR + Team Monitoring</p>
 </div>
 
 <div class="card">
-<h2>Create Dispatch</h2>
 
-<table>
-<tr>
-<td><input id="orderId" placeholder="Order ID"></td>
-<td><input id="team" placeholder="Team / Party"></td>
-<td><input id="bundle" placeholder="Bundle Count"></td>
-<td><input id="qty" placeholder="Total PCS"></td>
-</tr>
+<h2>Create Execution Entry</h2>
 
-<tr>
-<td><input id="vendor" placeholder="Transport Vendor"></td>
-<td><input id="lr" placeholder="LR Number"></td>
-<td>
-<select id="type">
-<option>Team Dispatch</option>
-<option>Direct Party</option>
+<div class="grid">
+<div>
+<label>Order ID</label>
+<input id="orderId">
+</div>
+
+<div>
+<label>Execution Team</label>
+<input id="team">
+</div>
+
+<div>
+<label>Vehicle Number</label>
+<input id="vehicle">
+</div>
+
+<div>
+<label>GPS Location</label>
+<input id="gps">
+</div>
+
+<div>
+<label>Photo Count</label>
+<select id="photos">
+<option>1</option>
+<option>3</option>
 </select>
-</td>
-<td><button onclick="addDispatch()">Save Dispatch</button></td>
-</tr>
-</table>
+</div>
+
+<div>
+<label>OCR Status</label>
+<select id="ocr">
+<option>Matched</option>
+<option>Manual Verify</option>
+</select>
+</div>
+</div>
+
+<br>
+
+<button onclick="saveExecution()">Save Execution</button>
+
 </div>
 
 <div class="card">
-<h2>Dispatch Reports</h2>
+
+<h2>Execution Reports</h2>
+
 <table id="tbl">
+
 <tr>
 <th>Order</th>
-<th>Dispatch Type</th>
-<th>Team/Party</th>
-<th>Bundle</th>
-<th>PCS</th>
-<th>Vendor</th>
-<th>LR</th>
+<th>Team</th>
+<th>Vehicle</th>
+<th>GPS</th>
+<th>Photos</th>
+<th>OCR</th>
 <th>Status</th>
 </tr>
+
 </table>
+
 </div>
+
 </div>
 
 <script>
-let dispatches = JSON.parse(localStorage.getItem("dispatches") || "[]");
+
+let executions = JSON.parse(localStorage.getItem("executions") || "[]");
 
 function render(){
+
 let html = `
 <tr>
 <th>Order</th>
-<th>Dispatch Type</th>
-<th>Team/Party</th>
-<th>Bundle</th>
-<th>PCS</th>
-<th>Vendor</th>
-<th>LR</th>
+<th>Team</th>
+<th>Vehicle</th>
+<th>GPS</th>
+<th>Photos</th>
+<th>OCR</th>
 <th>Status</th>
 </tr>
 `;
 
-dispatches.forEach(d=>{
+executions.forEach(e=>{
+
 html += `
 <tr>
-<td>${d.orderId}</td>
-<td>${d.type}</td>
-<td>${d.team}</td>
-<td>${d.bundle}</td>
-<td>${d.qty}</td>
-<td>${d.vendor}</td>
-<td>${d.lr}</td>
-<td>Ready For Execution</td>
+<td>${e.orderId}</td>
+<td>${e.team}</td>
+<td>${e.vehicle}</td>
+<td>${e.gps}</td>
+<td>${e.photos}</td>
+<td>${e.ocr}</td>
+<td><span class='badge'>Completed</span></td>
 </tr>
 `;
+
 });
 
 document.getElementById("tbl").innerHTML = html;
+
 }
 
-function addDispatch(){
+function saveExecution(){
 
-dispatches.unshift({
+executions.unshift({
 orderId : document.getElementById("orderId").value,
 team : document.getElementById("team").value,
-bundle : document.getElementById("bundle").value,
-qty : document.getElementById("qty").value,
-vendor : document.getElementById("vendor").value,
-lr : document.getElementById("lr").value,
-type : document.getElementById("type").value
+vehicle : document.getElementById("vehicle").value,
+gps : document.getElementById("gps").value,
+photos : document.getElementById("photos").value,
+ocr : document.getElementById("ocr").value
 });
 
-localStorage.setItem("dispatches", JSON.stringify(dispatches));
+localStorage.setItem("executions", JSON.stringify(executions));
 
 render();
 
-alert("Dispatch Saved");
+alert("Execution Saved");
 
 }
 
 render();
+
 </script>
+
 </body>
 </html>
