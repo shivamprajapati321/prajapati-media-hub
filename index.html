@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MediaHub Phase 27 GPS AI Verification</title>
+<title>MediaHub Phase 28 PWA Mobile App</title>
+
+<link rel="manifest" href="manifest.json">
+
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:18px}
@@ -12,67 +15,50 @@ body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .stat{background:#17181f;border:1px solid #333;border-radius:14px;padding:16px}
 .stat h3{margin:0 0 8px;color:#aaa;font-size:12px}
 .stat h1{margin:0;color:#ff6b00}
+button{padding:12px 16px;background:#ff6b00;border:none;border-radius:10px;font-weight:700;color:#111;cursor:pointer}
+input,select,textarea{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
-input,select,textarea{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
-button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;color:#111;cursor:pointer}
-.badge{padding:5px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#22c55e20;color:#22c55e}
+.badge{padding:5px 10px;border-radius:999px;background:#22c55e20;color:#22c55e;font-size:11px;font-weight:700}
 .orange{background:#ff6b0020;color:#ff6b00}
-.red{background:#ef444420;color:#ef4444}
-.blue{background:#38bdf820;color:#38bdf8}
 </style>
 </head>
+
 <body>
 
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 27 - GPS + AI Verification ERP</h1>
-<p>OCR validation + GPS verification + duplicate detection engine</p>
+<h1>Phase 28 - Mobile PWA ERP</h1>
+<p>Installable mobile app + offline-ready workflow</p>
 </div>
 
 <div class="grid" id="stats"></div>
 
 <div class="card">
 
-<h2>Create Verification Entry</h2>
+<h2>Mobile Execution Entry</h2>
 
 <table>
+
 <tr>
+<td><input id="team" placeholder="Team Name"></td>
 <td><input id="vehicle" placeholder="Vehicle Number"></td>
-<td><input id="gps" placeholder="GPS Coordinates"></td>
-
-<td>
-<select id="ocr">
-<option>Matched</option>
-<option>Manual Verify</option>
-<option>Failed OCR</option>
-</select>
-</td>
-
-<td>
-<select id="duplicate">
-<option>No Duplicate</option>
-<option>Duplicate Found</option>
-</select>
-</td>
-
-<td>
-<select id="radius">
-<option>Inside Radius</option>
-<option>Outside Radius</option>
-</select>
-</td>
+<td><input id="city" placeholder="City"></td>
 </tr>
 
 <tr>
-<td colspan="4">
-<textarea id="notes" placeholder="AI Verification Notes"></textarea>
+<td>
+<select id="status">
+<option>Started</option>
+<option>Running</option>
+<option>Completed</option>
+</select>
 </td>
 
-<td>
-<button onclick="saveEntry()">Verify</button>
-</td>
+<td><input id="gps" placeholder="GPS Coordinates"></td>
+
+<td><button onclick="saveEntry()">Save Offline Entry</button></td>
 </tr>
 
 </table>
@@ -80,36 +66,50 @@ button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-w
 </div>
 
 <div class="card">
-<h2>Verification Reports</h2>
-<table id="verifyTable"></table>
+<h2>Offline Sync Queue</h2>
+<table id="queueTable"></table>
 </div>
 
 <div class="card">
-<h2>AI Verification Summary</h2>
-<div id="summary"></div>
+<h2>PWA Features</h2>
+
+<ul>
+<li>Installable mobile app</li>
+<li>Offline storage</li>
+<li>Field-ready UI</li>
+<li>GPS workflow</li>
+<li>Execution queue</li>
+<li>Future camera integration</li>
+<li>Push notification ready</li>
+</ul>
+
+<br>
+
+<button onclick="installInfo()">Install App Guide</button>
+
 </div>
 
 </div>
 
 <script>
 
-let entries = JSON.parse(localStorage.getItem("mh27_verify") || "[]");
+let entries = JSON.parse(localStorage.getItem("mh28_pwa_entries") || "[]");
 
 function save(){
-localStorage.setItem("mh27_verify", JSON.stringify(entries));
+localStorage.setItem("mh28_pwa_entries", JSON.stringify(entries));
 }
 
 function saveEntry(){
 
 let item = {
-id:"GPS-"+Date.now(),
+id:"PWA-"+Date.now(),
+team:document.getElementById("team").value,
 vehicle:document.getElementById("vehicle").value,
+city:document.getElementById("city").value,
+status:document.getElementById("status").value,
 gps:document.getElementById("gps").value,
-ocr:document.getElementById("ocr").value,
-duplicate:document.getElementById("duplicate").value,
-radius:document.getElementById("radius").value,
-notes:document.getElementById("notes").value,
-time:new Date().toLocaleString("en-IN")
+time:new Date().toLocaleString("en-IN"),
+sync:"Pending"
 };
 
 entries.unshift(item);
@@ -118,7 +118,7 @@ save();
 
 render();
 
-alert("Verification Completed");
+alert("Offline Entry Saved");
 
 }
 
@@ -126,72 +126,52 @@ function render(){
 
 let total = entries.length;
 
-let matched = entries.filter(x=>x.ocr==="Matched").length;
+let pending = entries.filter(x=>x.sync==="Pending").length;
 
-let duplicate = entries.filter(x=>x.duplicate==="Duplicate Found").length;
-
-let outside = entries.filter(x=>x.radius==="Outside Radius").length;
+let completed = entries.filter(x=>x.status==="Completed").length;
 
 document.getElementById("stats").innerHTML = `
-<div class="stat"><h3>Total Checks</h3><h1>${total}</h1></div>
-<div class="stat"><h3>OCR Matched</h3><h1>${matched}</h1></div>
-<div class="stat"><h3>Duplicate Alerts</h3><h1>${duplicate}</h1></div>
-<div class="stat"><h3>Outside Radius</h3><h1>${outside}</h1></div>
+<div class="stat"><h3>Total Offline Entries</h3><h1>${total}</h1></div>
+<div class="stat"><h3>Pending Sync</h3><h1>${pending}</h1></div>
+<div class="stat"><h3>Completed</h3><h1>${completed}</h1></div>
 `;
 
 let html = `
 <tr>
+<th>Team</th>
 <th>Vehicle</th>
-<th>OCR</th>
-<th>Duplicate</th>
-<th>GPS Radius</th>
+<th>Status</th>
+<th>Sync</th>
 <th>Time</th>
 </tr>`;
 
 entries.forEach(e=>{
 
-let cls = e.duplicate==="Duplicate Found"
-? "red"
-: e.radius==="Outside Radius"
-? "orange"
-: "";
-
 html += `
 <tr>
+<td>${e.team}</td>
 <td>${e.vehicle}</td>
-<td><span class="badge">${e.ocr}</span></td>
-<td><span class="badge ${cls}">${e.duplicate}</span></td>
-<td><span class="badge ${cls}">${e.radius}</span></td>
+<td><span class="badge orange">${e.status}</span></td>
+<td><span class="badge">${e.sync}</span></td>
 <td>${e.time}</td>
 </tr>`;
 
 });
 
-document.getElementById("verifyTable").innerHTML = html;
-
-if(entries.length){
-
-let latest = entries[0];
-
-document.getElementById("summary").innerHTML = `
-<h2>Latest AI Verification</h2>
-
-<p><b>Vehicle:</b> ${latest.vehicle}</p>
-<p><b>OCR:</b> ${latest.ocr}</p>
-<p><b>Duplicate Check:</b> ${latest.duplicate}</p>
-<p><b>Radius Validation:</b> ${latest.radius}</p>
-<p><b>GPS:</b> ${latest.gps}</p>
-
-<p><b>AI Notes:</b><br>${latest.notes}</p>
-
-<p>
-This structure is ready for:
-OCR APIs, GPS validation APIs, duplicate image AI and auto approval systems.
-</p>
-`;
+document.getElementById("queueTable").innerHTML = html;
 
 }
 
+function installInfo(){
+
+alert(
+"Open in Chrome Mobile → Click 3 dots → Add to Home Screen"
+);
+
+}
+
+if('serviceWorker' in navigator){
+navigator.serviceWorker.register('sw.js');
 }
 
 render();
