@@ -3,22 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MediaHub Phase 22 Quotation & Invoice</title>
+<title>MediaHub Phase 23 HR ERP</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:18px}
 .card{background:#111;border:1px solid #333;border-radius:16px;padding:18px;margin-bottom:18px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-input,select,textarea{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
-button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;color:#111;cursor:pointer}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
-.badge{padding:5px 10px;border-radius:999px;background:#22c55e20;color:#22c55e;font-size:11px;font-weight:700}
-.orange{background:#ff6b0020;color:#ff6b00}
-.preview{background:#0b0b0b;border:1px solid #333;border-radius:12px;padding:16px;white-space:pre-line}
 .stat{background:#17181f;border:1px solid #333;border-radius:14px;padding:16px}
 .stat h3{margin:0 0 8px;color:#aaa;font-size:12px}
 .stat h1{margin:0;color:#ff6b00}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
+input,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
+button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;color:#111;cursor:pointer}
+.badge{padding:5px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#22c55e20;color:#22c55e}
+.orange{background:#ff6b0020;color:#ff6b00}
+.red{background:#ef444420;color:#ef4444}
 </style>
 </head>
 <body>
@@ -26,249 +26,217 @@ th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 22 - Quotation & Invoice ERP</h1>
-<p>Quotation creation + GST invoice + payment summary</p>
+<h1>Phase 23 - HR + Attendance ERP</h1>
+<p>Employee management + GPS attendance + payroll-ready structure</p>
+</div>
+
+<div class="grid" id="stats"></div>
+
+<div class="card">
+
+<h2>Add Employee</h2>
+
+<table>
+<tr>
+<td><input id="name" placeholder="Employee Name"></td>
+<td>
+<select id="department">
+<option>Sales</option>
+<option>Design</option>
+<option>Printing</option>
+<option>Stitching</option>
+<option>Dispatch</option>
+<option>Execution</option>
+<option>Accounts</option>
+<option>Admin</option>
+</select>
+</td>
+<td><input id="salary" type="number" placeholder="Monthly Salary"></td>
+<td><button onclick="saveEmployee()">Save Employee</button></td>
+</tr>
+</table>
+
 </div>
 
 <div class="card">
 
-<h2>Create Quotation / Invoice</h2>
+<h2>Attendance Entry</h2>
 
-<div class="grid">
+<table>
+<tr>
+<td><input id="empName" placeholder="Employee Name"></td>
 
-<div>
-<label>Company</label>
-<input id="company">
-</div>
-
-<div>
-<label>Person</label>
-<input id="person">
-</div>
-
-<div>
-<label>Contact</label>
-<input id="contact">
-</div>
-
-<div>
-<label>City</label>
-<input id="city">
-</div>
-
-<div>
-<label>Service</label>
-<select id="service">
-<option>Auto Rickshaw Hood Branding</option>
-<option>Back Panel</option>
-<option>Flex Printing</option>
-<option>Wall Wrap</option>
-<option>No Parking Board</option>
+<td>
+<select id="attendance">
+<option>Present</option>
+<option>Absent</option>
+<option>Leave</option>
+<option>Half Day</option>
 </select>
-</div>
+</td>
 
-<div>
-<label>Quantity</label>
-<input id="qty" type="number" oninput="calc()">
-</div>
+<td><input id="gps" placeholder="GPS Location"></td>
 
-<div>
-<label>Rate Per PCS</label>
-<input id="rate" type="number" oninput="calc()">
-</div>
-
-<div>
-<label>GST Type</label>
-<select id="gstType" onchange="calc()">
-<option>GST</option>
-<option>Non GST</option>
+<td>
+<select id="shift">
+<option>Morning</option>
+<option>Evening</option>
+<option>Night</option>
 </select>
-</div>
+</td>
 
-<div>
-<label>Advance Payment</label>
-<input id="advance" type="number" oninput="calc()">
-</div>
-
-<div>
-<label>Status</label>
-<select id="status">
-<option>Quotation</option>
-<option>Invoice</option>
-<option>Paid</option>
-<option>Outstanding</option>
-</select>
-</div>
-
-</div>
-
-<br>
-
-<button onclick="saveDoc()">Save Document</button>
-
-</div>
-
-<div class="grid">
-
-<div class="stat">
-<h3>Base Amount</h3>
-<h1 id="base">₹0</h1>
-</div>
-
-<div class="stat">
-<h3>GST</h3>
-<h1 id="gst">₹0</h1>
-</div>
-
-<div class="stat">
-<h3>Final Amount</h3>
-<h1 id="final">₹0</h1>
-</div>
-
-<div class="stat">
-<h3>Balance</h3>
-<h1 id="balance">₹0</h1>
-</div>
+<td><button onclick="saveAttendance()">Save Attendance</button></td>
+</tr>
+</table>
 
 </div>
 
 <div class="card">
-<h2>Saved Documents</h2>
-<table id="docTable"></table>
+<h2>Employees</h2>
+<table id="employeeTable"></table>
 </div>
 
 <div class="card">
-<h2>Preview</h2>
-<div id="preview" class="preview">No document selected.</div>
+<h2>Attendance Reports</h2>
+<table id="attendanceTable"></table>
+</div>
+
+<div class="card">
+<h2>Payroll Summary</h2>
+<div id="summary"></div>
 </div>
 
 </div>
 
 <script>
 
-let docs = JSON.parse(localStorage.getItem("mh22_docs") || "[]");
+let employees = JSON.parse(localStorage.getItem("mh23_employees") || "[]");
+let attendance = JSON.parse(localStorage.getItem("mh23_attendance") || "[]");
+
+function save(){
+localStorage.setItem("mh23_employees", JSON.stringify(employees));
+localStorage.setItem("mh23_attendance", JSON.stringify(attendance));
+}
 
 function money(x){
 return "₹" + Number(x || 0).toLocaleString("en-IN");
 }
 
-function calc(){
+function saveEmployee(){
 
-let qty = Number(document.getElementById("qty").value || 0);
-let rate = Number(document.getElementById("rate").value || 0);
-let advance = Number(document.getElementById("advance").value || 0);
-
-let base = qty * rate;
-
-let gst = document.getElementById("gstType").value === "GST"
-? Math.round(base * 0.18)
-: 0;
-
-let final = base + gst;
-let balance = final - advance;
-
-document.getElementById("base").innerText = money(base);
-document.getElementById("gst").innerText = money(gst);
-document.getElementById("final").innerText = money(final);
-document.getElementById("balance").innerText = money(balance);
-
-return {base,gst,final,balance};
-
-}
-
-function saveDoc(){
-
-let totals = calc();
-
-let item = {
-id:"DOC-"+Date.now(),
-company:document.getElementById("company").value,
-person:document.getElementById("person").value,
-contact:document.getElementById("contact").value,
-city:document.getElementById("city").value,
-service:document.getElementById("service").value,
-qty:Number(document.getElementById("qty").value || 0),
-rate:Number(document.getElementById("rate").value || 0),
-gstType:document.getElementById("gstType").value,
-advance:Number(document.getElementById("advance").value || 0),
-status:document.getElementById("status").value,
-base:totals.base,
-gst:totals.gst,
-final:totals.final,
-balance:totals.balance,
-created:new Date().toLocaleString("en-IN")
+let emp = {
+id:"EMP-"+Date.now(),
+name:document.getElementById("name").value,
+department:document.getElementById("department").value,
+salary:Number(document.getElementById("salary").value || 0)
 };
 
-docs.unshift(item);
+employees.unshift(emp);
 
-localStorage.setItem("mh22_docs", JSON.stringify(docs));
+save();
 
 render();
 
-alert("Document Saved");
+alert("Employee Saved");
+
+}
+
+function saveAttendance(){
+
+let item = {
+id:"ATT-"+Date.now(),
+name:document.getElementById("empName").value,
+attendance:document.getElementById("attendance").value,
+gps:document.getElementById("gps").value,
+shift:document.getElementById("shift").value,
+time:new Date().toLocaleString("en-IN")
+};
+
+attendance.unshift(item);
+
+save();
+
+render();
+
+alert("Attendance Saved");
 
 }
 
 function render(){
 
-let html = `
+let totalEmp = employees.length;
+let totalSalary = employees.reduce((a,x)=>a+x.salary,0);
+
+let present = attendance.filter(x=>x.attendance==="Present").length;
+let leave = attendance.filter(x=>x.attendance==="Leave").length;
+let absent = attendance.filter(x=>x.attendance==="Absent").length;
+
+document.getElementById("stats").innerHTML = `
+<div class="stat"><h3>Total Employees</h3><h1>${totalEmp}</h1></div>
+<div class="stat"><h3>Present</h3><h1>${present}</h1></div>
+<div class="stat"><h3>Leave</h3><h1>${leave}</h1></div>
+<div class="stat"><h3>Absent</h3><h1>${absent}</h1></div>
+<div class="stat"><h3>Total Payroll</h3><h1>${money(totalSalary)}</h1></div>
+`;
+
+let empHtml = `
 <tr>
-<th>ID</th>
-<th>Company</th>
-<th>Service</th>
-<th>Final</th>
-<th>Status</th>
-<th>Preview</th>
+<th>Name</th>
+<th>Department</th>
+<th>Salary</th>
 </tr>`;
 
-docs.forEach(d=>{
+employees.forEach(e=>{
 
-html += `
+empHtml += `
 <tr>
-<td>${d.id}</td>
-<td>${d.company}</td>
-<td>${d.service}</td>
-<td>${money(d.final)}</td>
-<td><span class="badge orange">${d.status}</span></td>
-<td><button onclick="previewDoc('${d.id}')">View</button></td>
+<td>${e.name}</td>
+<td>${e.department}</td>
+<td>${money(e.salary)}</td>
 </tr>`;
 
 });
 
-document.getElementById("docTable").innerHTML = html;
+document.getElementById("employeeTable").innerHTML = empHtml;
 
-}
+let attHtml = `
+<tr>
+<th>Name</th>
+<th>Status</th>
+<th>Shift</th>
+<th>GPS</th>
+<th>Time</th>
+</tr>`;
 
-function previewDoc(id){
+attendance.forEach(a=>{
 
-let d = docs.find(x=>x.id===id);
+let cls = a.attendance==="Absent" ? "red" : a.attendance==="Leave" ? "orange" : "";
 
-document.getElementById("preview").innerText = `
-PRAJAPATI ADVERTISING
+attHtml += `
+<tr>
+<td>${a.name}</td>
+<td><span class="badge ${cls}">${a.attendance}</span></td>
+<td>${a.shift}</td>
+<td>${a.gps}</td>
+<td>${a.time}</td>
+</tr>`;
 
-Document ID: ${d.id}
-Date: ${d.created}
+});
 
-Company: ${d.company}
-Person: ${d.person}
-Contact: ${d.contact}
-City: ${d.city}
+document.getElementById("attendanceTable").innerHTML = attHtml;
 
-Service: ${d.service}
+document.getElementById("summary").innerHTML = `
+<h2>HR Summary</h2>
 
-Quantity: ${d.qty}
-Rate: ${money(d.rate)}
+<p><b>Total Employees:</b> ${totalEmp}</p>
+<p><b>Total Payroll:</b> ${money(totalSalary)}</p>
+<p><b>Present Today:</b> ${present}</p>
+<p><b>Leaves:</b> ${leave}</p>
+<p><b>Absent:</b> ${absent}</p>
 
-Base Amount: ${money(d.base)}
-GST: ${money(d.gst)}
-Final Amount: ${money(d.final)}
-
-Advance: ${money(d.advance)}
-Balance: ${money(d.balance)}
-
-Status: ${d.status}
-
-Thank you for choosing Prajapati Advertising.
+<p>
+HR structure ready for salary system, GPS attendance and payroll automation.
+</p>
 `;
 
 }
