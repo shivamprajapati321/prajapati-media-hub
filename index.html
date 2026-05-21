@@ -3,26 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MediaHub Phase 19 Field Panel</title>
+<title>MediaHub Phase 20 Executive Dashboard</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
-.wrap{padding:14px;max-width:900px;margin:auto}
-.card{background:#111;border:1px solid #333;border-radius:16px;padding:16px;margin-bottom:16px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-input,select,textarea{padding:12px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:10px;width:100%}
-button{padding:12px 16px;background:#ff6b00;border:none;border-radius:10px;font-weight:700;color:#111;cursor:pointer}
+.wrap{padding:18px}
+.card{background:#111;border:1px solid #333;border-radius:16px;padding:18px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.stat{background:#17181f;border:1px solid #333;border-radius:14px;padding:16px}
+.stat h3{margin:0 0 8px;color:#aaa;font-size:12px}
+.stat h1{margin:0;color:#ff6b00}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #333;text-align:left;font-size:13px}
-.badge{padding:5px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#22c55e20;color:#22c55e}
+.badge{padding:5px 10px;border-radius:999px;background:#22c55e20;color:#22c55e;font-size:11px;font-weight:700}
 .orange{background:#ff6b0020;color:#ff6b00}
-.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
-.stat{background:#17181f;border:1px solid #333;border-radius:14px;padding:14px}
-.stat h3{margin:0 0 8px;color:#aaa;font-size:11px}
-.stat h1{margin:0;color:#ff6b00}
-.timeline{border-left:2px solid #333;padding-left:12px}
-.event{margin-bottom:14px}
-small{color:#999}
-@media(max-width:700px){.grid{grid-template-columns:1fr}}
+.red{background:#ef444420;color:#ef4444}
+input,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
+button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700;color:#111;cursor:pointer}
+.progress{height:10px;background:#242424;border-radius:999px;overflow:hidden}
+.bar{height:100%;background:#ff6b00}
 </style>
 </head>
 <body>
@@ -30,174 +28,185 @@ small{color:#999}
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 19 - Mobile Field Execution Panel</h1>
-<p>Field team check-in + GPS attendance + route progress</p>
+<h1>Phase 20 - Executive Analytics Dashboard</h1>
+<p>Owner / CEO level analytics + business intelligence overview</p>
 </div>
 
-<div class="statgrid" id="stats"></div>
+<div class="grid" id="stats"></div>
 
 <div class="card">
-<h2>Team Check-In</h2>
+<h2>Add Performance Entry</h2>
 
-<div class="grid">
-<div>
-<label>Team Name</label>
-<input id="team">
-</div>
+<table>
+<tr>
+<td><input id="city" placeholder="City"></td>
+<td><input id="team" placeholder="Team"></td>
+<td><input id="revenue" type="number" placeholder="Revenue"></td>
+<td><input id="expense" type="number" placeholder="Expense"></td>
+</tr>
 
-<div>
-<label>Campaign</label>
-<input id="campaign">
-</div>
-
-<div>
-<label>City</label>
-<input id="city">
-</div>
-
-<div>
-<label>GPS Location</label>
-<input id="gps" placeholder="18.5204,73.8567">
-</div>
-
-<div>
-<label>Vehicle Number</label>
-<input id="vehicle">
-</div>
-
-<div>
-<label>Status</label>
+<tr>
+<td><input id="orders" type="number" placeholder="Orders"></td>
+<td><input id="completed" type="number" placeholder="Completed"></td>
+<td>
 <select id="status">
-<option>Checked In</option>
-<option>On Route</option>
-<option>Execution Running</option>
-<option>Completed</option>
+<option>Growing</option>
+<option>Stable</option>
+<option>Critical</option>
 </select>
-</div>
-
-<div>
-<label>Photo Count</label>
-<select id="photos">
-<option>1</option>
-<option>3</option>
-<option>5</option>
-</select>
-</div>
-
-<div>
-<label>OCR</label>
-<select id="ocr">
-<option>Matched</option>
-<option>Manual Verify</option>
-</select>
-</div>
-</div>
-
-<br>
-
-<button onclick="saveEntry()">Save Field Entry</button>
+</td>
+<td><button onclick="saveEntry()">Save Analytics</button></td>
+</tr>
+</table>
 
 </div>
 
 <div class="card">
-<h2>Live Field Entries</h2>
-<table id="entryTable"></table>
+<h2>City Performance</h2>
+<table id="cityTable"></table>
 </div>
 
 <div class="card">
-<h2>Activity Timeline</h2>
-<div class="timeline" id="timeline"></div>
+<h2>Team Productivity</h2>
+<table id="teamTable"></table>
+</div>
+
+<div class="card">
+<h2>Business Health Summary</h2>
+<div id="summary"></div>
 </div>
 
 </div>
 
 <script>
-let entries = JSON.parse(localStorage.getItem("mh19_entries") || "[]");
+
+let analytics = JSON.parse(localStorage.getItem("mh20_analytics") || "[]");
 
 function save(){
-localStorage.setItem("mh19_entries", JSON.stringify(entries));
+localStorage.setItem("mh20_analytics", JSON.stringify(analytics));
 }
 
-function renderStats(){
-let total = entries.length;
-let completed = entries.filter(x=>x.status==="Completed").length;
-let running = entries.filter(x=>x.status==="Execution Running").length;
-let teams = [...new Set(entries.map(x=>x.team))].length;
-
-document.getElementById("stats").innerHTML = `
-<div class="stat"><h3>Total Entries</h3><h1>${total}</h1></div>
-<div class="stat"><h3>Completed</h3><h1>${completed}</h1></div>
-<div class="stat"><h3>Running</h3><h1>${running}</h1></div>
-<div class="stat"><h3>Active Teams</h3><h1>${teams}</h1></div>
-`;
+function money(x){
+return "₹" + Number(x || 0).toLocaleString("en-IN");
 }
 
 function saveEntry(){
+
 let item = {
-id:"FLD-"+Date.now(),
-team:document.getElementById("team").value,
-campaign:document.getElementById("campaign").value,
+id:"AN-"+Date.now(),
 city:document.getElementById("city").value,
-gps:document.getElementById("gps").value,
-vehicle:document.getElementById("vehicle").value,
-status:document.getElementById("status").value,
-photos:document.getElementById("photos").value,
-ocr:document.getElementById("ocr").value,
-time:new Date().toLocaleString("en-IN")
+team:document.getElementById("team").value,
+revenue:Number(document.getElementById("revenue").value || 0),
+expense:Number(document.getElementById("expense").value || 0),
+orders:Number(document.getElementById("orders").value || 0),
+completed:Number(document.getElementById("completed").value || 0),
+status:document.getElementById("status").value
 };
 
-entries.unshift(item);
+analytics.unshift(item);
+
 save();
+
 render();
-alert("Field Entry Saved");
+
+alert("Analytics Entry Saved");
+
 }
 
 function render(){
 
-renderStats();
+let totalRevenue = analytics.reduce((a,x)=>a+x.revenue,0);
+let totalExpense = analytics.reduce((a,x)=>a+x.expense,0);
+let totalOrders = analytics.reduce((a,x)=>a+x.orders,0);
+let completed = analytics.reduce((a,x)=>a+x.completed,0);
 
-let html = `
+let profit = totalRevenue-totalExpense;
+let completion = totalOrders ? Math.round((completed/totalOrders)*100) : 0;
+
+document.getElementById("stats").innerHTML = `
+<div class="stat"><h3>Total Revenue</h3><h1>${money(totalRevenue)}</h1></div>
+<div class="stat"><h3>Total Expense</h3><h1>${money(totalExpense)}</h1></div>
+<div class="stat"><h3>Profit</h3><h1>${money(profit)}</h1></div>
+<div class="stat"><h3>Total Orders</h3><h1>${totalOrders}</h1></div>
+<div class="stat"><h3>Completed</h3><h1>${completed}</h1></div>
+<div class="stat"><h3>Completion %</h3><h1>${completion}%</h1></div>
+`;
+
+let cityHtml = `
+<tr>
+<th>City</th>
+<th>Revenue</th>
+<th>Expense</th>
+<th>Profit</th>
+<th>Status</th>
+</tr>`;
+
+analytics.forEach(a=>{
+
+let p = a.revenue-a.expense;
+
+let cls = a.status === "Critical" ? "red" : a.status === "Stable" ? "orange" : "";
+
+cityHtml += `
+<tr>
+<td>${a.city}</td>
+<td>${money(a.revenue)}</td>
+<td>${money(a.expense)}</td>
+<td>${money(p)}</td>
+<td><span class="badge ${cls}">${a.status}</span></td>
+</tr>`;
+
+});
+
+document.getElementById("cityTable").innerHTML = cityHtml;
+
+let teamHtml = `
 <tr>
 <th>Team</th>
-<th>Campaign</th>
-<th>City</th>
-<th>Vehicle</th>
-<th>GPS</th>
-<th>Status</th>
-<th>OCR</th>
-<th>Time</th>
+<th>Orders</th>
+<th>Completed</th>
+<th>Progress</th>
 </tr>`;
 
-entries.forEach(e=>{
-html += `
+analytics.forEach(a=>{
+
+let pct = a.orders ? Math.round((a.completed/a.orders)*100) : 0;
+
+teamHtml += `
 <tr>
-<td>${e.team}</td>
-<td>${e.campaign}</td>
-<td>${e.city}</td>
-<td>${e.vehicle}</td>
-<td>${e.gps}</td>
-<td><span class="badge orange">${e.status}</span></td>
-<td>${e.ocr}</td>
-<td>${e.time}</td>
+<td>${a.team}</td>
+<td>${a.orders}</td>
+<td>${a.completed}</td>
+<td>
+<div class="progress">
+<div class="bar" style="width:${pct}%"></div>
+</div>
+${pct}%
+</td>
 </tr>`;
+
 });
 
-document.getElementById("entryTable").innerHTML = html;
+document.getElementById("teamTable").innerHTML = teamHtml;
 
-let tl = "";
-entries.slice(0,20).forEach(e=>{
-tl += `
-<div class="event">
-<h3>${e.team} - ${e.status}</h3>
-<p>${e.campaign} | ${e.city} | Vehicle: ${e.vehicle}</p>
-<small>${e.time}</small>
-</div>`;
-});
+document.getElementById("summary").innerHTML = `
+<h2>CEO Summary</h2>
 
-document.getElementById("timeline").innerHTML = tl;
+<p><b>Revenue Engine:</b> ${money(totalRevenue)}</p>
+<p><b>Profit Engine:</b> ${money(profit)}</p>
+<p><b>Operational Completion:</b> ${completion}%</p>
+<p><b>Business Health:</b> ${completion >= 80 ? "Strong" : completion >= 50 ? "Average" : "Critical"}</p>
+
+<p>
+Use this dashboard for owner-level decisions:
+city expansion, team productivity, profitability and execution control.
+</p>
+`;
+
 }
 
 render();
+
 </script>
 
 </body>
