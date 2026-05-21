@@ -1,13 +1,82 @@
 
-body{margin:0;font-family:Arial;background:#050506;color:#fff;display:flex}
-.sidebar{width:240px;background:#111;height:100vh;padding:20px;display:flex;flex-direction:column;gap:10px}
-.logo{font-size:28px;font-weight:900;color:#ff6b00;margin-bottom:20px}
-.sidebar button{padding:12px;border:none;border-radius:10px;background:#1b1b1f;color:#fff;cursor:pointer}
-.main-content{flex:1;padding:25px}
-.stats-grid,.orders-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px}
-.stat-card,.order-card{background:#111;border:1px solid #2c2c33;border-radius:16px;padding:20px}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0}
-input{padding:12px;border-radius:10px;border:1px solid #2c2c33;background:#0b0b0d;color:#fff}
-.main-btn,.approve-btn{padding:12px 16px;background:#ff6b00;border:none;border-radius:10px;font-weight:700;cursor:pointer}
-.modern-table{width:100%;border-collapse:collapse;background:#111}
-.modern-table th,.modern-table td{padding:12px;border:1px solid #2c2c33}
+body{
+margin:0;
+font-family:Arial;
+background:#000;
+color:#fff;
+display:flex;
+}
+.sidebar{
+width:240px;
+background:#111;
+height:100vh;
+padding:20px;
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+.logo{
+font-size:38px;
+font-weight:900;
+color:#ff7300;
+margin-bottom:20px;
+}
+.sidebar button{
+padding:14px;
+border:none;
+background:#1a1a22;
+color:#fff;
+border-radius:12px;
+cursor:pointer;
+}
+.main{
+flex:1;
+padding:25px;
+}
+.cards{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:20px;
+}
+.card{
+background:#111;
+border:1px solid #2a2a33;
+padding:20px;
+border-radius:16px;
+}
+.card p{
+font-size:28px;
+color:#ff7300;
+font-weight:700;
+}
+.form-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:15px;
+margin-bottom:20px;
+}
+input{
+padding:14px;
+background:#0d0d12;
+border:1px solid #2a2a33;
+color:#fff;
+border-radius:12px;
+}
+.orange-btn{
+padding:14px 20px;
+background:#ff7300;
+border:none;
+border-radius:12px;
+font-weight:700;
+cursor:pointer;
+}
+.page{display:none;}
+.active{display:block;}
+table{
+width:100%;
+border-collapse:collapse;
+}
+th,td{
+border:1px solid #2a2a33;
+padding:12px;
+}
