@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>MediaHub Phase 7</title>
+<title>MediaHub Phase 8</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
@@ -15,406 +14,255 @@ body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .content{padding:24px}
 .card{background:#111;border:1px solid #333;border-radius:18px;padding:20px;margin-bottom:18px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.stat{background:#17181f;border:1px solid #333;border-radius:15px;padding:16px}
+.stat h3{color:#aaa;font-size:12px;margin:0 0 8px}.stat h1{color:#ff6b00;margin:0}
 input,select,textarea{width:100%;padding:12px;border-radius:10px;background:#090909;color:#fff;border:1px solid #333;margin-top:6px}
 textarea{min-height:80px}
 .btn{padding:12px 16px;background:#ff6b00;border:none;border-radius:10px;font-weight:900;cursor:pointer}
 .btn2{padding:8px 12px;background:#1f2937;border:1px solid #333;color:#fff;border-radius:8px;cursor:pointer}
+.btnG{padding:8px 12px;background:#22c55e;border:none;color:#04120a;border-radius:8px;font-weight:900;cursor:pointer}
 table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
+th,td{padding:10px;border-bottom:1px solid #333;text-align:left;vertical-align:top}
 .badge{padding:5px 10px;border-radius:999px;background:#ff6b0020;color:#ff6b00;font-size:11px;font-weight:900}
+.ok{background:#22c55e20;color:#22c55e}
+.blue{background:#38bdf820;color:#38bdf8}
+.progress{height:9px;background:#242424;border-radius:999px;overflow:hidden}
+.bar{height:100%;background:#ff6b00}
 </style>
 </head>
 <body>
-
 <div class="layout">
-
 <div class="sidebar">
 <div class="logo">MEDIA<span>HUB</span></div>
-
 <div class="menu">
 <button onclick="dashboard()">Dashboard</button>
 <button onclick="createOrder()">Create Order</button>
 <button onclick="ordersPage()">Orders</button>
 <button onclick="designPage()">Design Approval</button>
+<button onclick="printingPage()">Printing ERP</button>
+<button onclick="reportsPage()">Reports</button>
 </div>
 </div>
-
 <div class="content" id="content"></div>
-
 </div>
 
 <script>
-
-let orders = JSON.parse(localStorage.getItem("mh_phase7_orders") || "[]");
+let orders = JSON.parse(localStorage.getItem("mh_phase8_orders") || "[]");
+let printJobs = JSON.parse(localStorage.getItem("mh_phase8_prints") || "[]");
+let locations = [];
 
 function saveDB(){
-localStorage.setItem("mh_phase7_orders", JSON.stringify(orders));
+  localStorage.setItem("mh_phase8_orders", JSON.stringify(orders));
+  localStorage.setItem("mh_phase8_prints", JSON.stringify(printJobs));
+}
+
+function money(n){return "₹"+Number(n||0).toLocaleString("en-IN");}
+
+function badge(s){
+  let cls = s==="Completed" || s==="Ready For Stitching" || s==="Approved" ? "ok" : s==="Running" ? "blue" : "";
+  return "<span class='badge "+cls+"'>"+s+"</span>";
 }
 
 function dashboard(){
+  let totalOrders=orders.length;
+  let readyPrint=orders.filter(o=>o.status==="Ready For Printing").length;
+  let running=printJobs.filter(p=>p.status==="Running").length;
+  let completed=printJobs.filter(p=>p.status==="Completed").length;
+  let printed=printJobs.reduce((a,p)=>a+Number(p.printed||0),0);
 
-let total = 0;
-
-orders.forEach(o=>{
-total += Number(o.final || 0);
-});
-
-content.innerHTML = `
-<div class='card'>
-<h1>Phase 7 Dashboard</h1>
-<p>Design + Client Approval System</p>
-</div>
-
-<div class='grid'>
-
-<div class='card'>
-<h3>Total Orders</h3>
-<h1>${orders.length}</h1>
-</div>
-
-<div class='card'>
-<h3>Total Revenue</h3>
-<h1>₹${total.toLocaleString("en-IN")}</h1>
-</div>
-
-</div>
-`;
-
+  content.innerHTML = `
+  <div class='card'>
+    <h1>Phase 8 Dashboard</h1>
+    <p>Printing Production ERP</p>
+  </div>
+  <div class='stats'>
+    <div class='stat'><h3>Total Orders</h3><h1>${totalOrders}</h1></div>
+    <div class='stat'><h3>Ready For Printing</h3><h1>${readyPrint}</h1></div>
+    <div class='stat'><h3>Printing Running</h3><h1>${running}</h1></div>
+    <div class='stat'><h3>Printing Completed</h3><h1>${completed}</h1></div>
+    <div class='stat'><h3>Total Printed Qty</h3><h1>${printed}</h1></div>
+  </div>`;
 }
 
-let locations = [];
-
 function createOrder(){
-
-locations = [];
-
-content.innerHTML = `
-<div class='card'>
-
-<h1>Create Real Order</h1>
-
-<div class='grid'>
-
-<div>
-<label>Company</label>
-<input id='company'>
-</div>
-
-<div>
-<label>Person</label>
-<input id='person'>
-</div>
-
-<div>
-<label>Contact</label>
-<input id='contact'>
-</div>
-
-<div>
-<label>Rate Per PCS</label>
-<input type='number' id='rate' oninput='updateTotals()'>
-</div>
-
-</div>
-
-<br>
-
-<h2>Multi City Split</h2>
-
-<div class='grid'>
-
-<div>
-<label>Location</label>
-<input id='city'>
-</div>
-
-<div>
-<label>Quantity</label>
-<input type='number' id='qty'>
-</div>
-
-<div>
-<label>Design Type</label>
-<select id='designType'>
-<option>Same Design</option>
-<option>Different Design</option>
-</select>
-</div>
-
-<div>
-<label>Design Upload</label>
-<input type='file' id='designUpload'>
-</div>
-
-</div>
-
-<br>
-
-<button class='btn2' onclick='addLocation()'>Add Location</button>
-
-<br><br>
-
-<div id='locationTable'></div>
-
-<br>
-
-<div class='grid'>
-
-<div class='card'>
-<h3>Total Qty</h3>
-<h1 id='totalQty'>0</h1>
-</div>
-
-<div class='card'>
-<h3>Final Amount</h3>
-<h1 id='finalAmount'>₹0</h1>
-</div>
-
-</div>
-
-<button class='btn' onclick='saveOrder()'>Create Order</button>
-
-</div>
-`;
-
+  locations=[];
+  content.innerHTML=`
+  <div class='card'>
+    <h1>Create Real Order</h1>
+    <div class='grid'>
+      <div><label>Company</label><input id='company'></div>
+      <div><label>Person</label><input id='person'></div>
+      <div><label>Contact</label><input id='contact'></div>
+      <div><label>Rate Per PCS</label><input type='number' id='rate' oninput='updateTotals()'></div>
+    </div>
+    <br>
+    <h2>Multi City Split</h2>
+    <div class='grid'>
+      <div><label>Location</label><input id='city'></div>
+      <div><label>Quantity</label><input type='number' id='qty'></div>
+      <div><label>Design Type</label><select id='designType'><option>Same Design</option><option>Different Design</option></select></div>
+      <div><label>Design Upload</label><input type='file' id='designUpload'></div>
+    </div>
+    <br>
+    <button class='btn2' onclick='addLocation()'>Add Location</button>
+    <br><br><div id='locationTable'></div>
+    <br>
+    <div class='stats'>
+      <div class='stat'><h3>Total Qty</h3><h1 id='totalQty'>0</h1></div>
+      <div class='stat'><h3>Final Amount</h3><h1 id='finalAmount'>₹0</h1></div>
+    </div>
+    <button class='btn' onclick='saveOrder()'>Create Order</button>
+  </div>`;
 }
 
 function addLocation(){
-
-let city = document.getElementById("city").value;
-let qty = Number(document.getElementById("qty").value || 0);
-let designType = document.getElementById("designType").value;
-let file = document.getElementById("designUpload").files[0];
-
-if(!city || !qty){
-alert("Enter location and quantity");
-return;
-}
-
-locations.push({
-city,
-qty,
-designType,
-designFile : file ? file.name : "Not Uploaded"
-});
-
-renderLocations();
-
+  let city=document.getElementById("city").value;
+  let qty=Number(document.getElementById("qty").value||0);
+  let designType=document.getElementById("designType").value;
+  let file=document.getElementById("designUpload").files[0];
+  if(!city||!qty){alert("Enter location and quantity");return;}
+  locations.push({city,qty,designType,designFile:file?file.name:"Not Uploaded"});
+  renderLocations();
 }
 
 function renderLocations(){
-
-let html = `
-<table>
-<tr>
-<th>City</th>
-<th>Qty</th>
-<th>Design</th>
-<th>File</th>
-</tr>
-`;
-
-locations.forEach(l=>{
-
-html += `
-<tr>
-<td>${l.city}</td>
-<td>${l.qty}</td>
-<td>${l.designType}</td>
-<td>${l.designFile}</td>
-</tr>
-`;
-
-});
-
-html += "</table>";
-
-document.getElementById("locationTable").innerHTML = html;
-
-updateTotals();
-
+  let html="<table><tr><th>City</th><th>Qty</th><th>Design</th><th>File</th></tr>";
+  locations.forEach(l=>{html+=`<tr><td>${l.city}</td><td>${l.qty}</td><td>${l.designType}</td><td>${l.designFile}</td></tr>`});
+  html+="</table>";
+  document.getElementById("locationTable").innerHTML=html;
+  updateTotals();
 }
 
 function updateTotals(){
-
-let qty = 0;
-
-locations.forEach(l=>{
-qty += Number(l.qty);
-});
-
-let rate = Number(document.getElementById("rate")?.value || 0);
-
-let total = qty * rate;
-
-document.getElementById("totalQty").innerText = qty;
-document.getElementById("finalAmount").innerText = "₹" + total.toLocaleString("en-IN");
-
+  let qty=locations.reduce((a,l)=>a+Number(l.qty),0);
+  let rate=Number(document.getElementById("rate")?.value||0);
+  let total=qty*rate;
+  if(document.getElementById("totalQty")) document.getElementById("totalQty").innerText=qty;
+  if(document.getElementById("finalAmount")) document.getElementById("finalAmount").innerText=money(total);
 }
 
 function saveOrder(){
-
-let qty = 0;
-
-locations.forEach(l=>{
-qty += Number(l.qty);
-});
-
-let rate = Number(document.getElementById("rate").value || 0);
-
-let total = qty * rate;
-
-orders.unshift({
-id : "ORD-" + Date.now(),
-company : document.getElementById("company").value,
-person : document.getElementById("person").value,
-contact : document.getElementById("contact").value,
-qty : qty,
-rate : rate,
-final : total,
-status : "Pending Design",
-clientApproval : "Pending",
-locations : locations
-});
-
-saveDB();
-
-alert("Order Created");
-
-ordersPage();
-
+  let qty=locations.reduce((a,l)=>a+Number(l.qty),0);
+  let rate=Number(document.getElementById("rate").value||0);
+  let total=qty*rate;
+  let order={
+    id:"ORD-"+Date.now(),
+    company:document.getElementById("company").value,
+    person:document.getElementById("person").value,
+    contact:document.getElementById("contact").value,
+    qty, rate, final:total,
+    status:"Pending Design",
+    clientApproval:"Pending",
+    locations
+  };
+  orders.unshift(order);
+  saveDB();
+  alert("Order Created");
+  ordersPage();
 }
 
 function ordersPage(){
-
-let rows = "";
-
-orders.forEach(o=>{
-
-rows += `
-<tr>
-<td>${o.id}</td>
-<td>${o.company}</td>
-<td>${o.qty}</td>
-<td>₹${o.final.toLocaleString("en-IN")}</td>
-<td><span class='badge'>${o.status}</span></td>
-<td>${o.clientApproval}</td>
-</tr>
-`;
-
-});
-
-content.innerHTML = `
-<div class='card'>
-
-<h1>Orders</h1>
-
-<table>
-
-<tr>
-<th>Order</th>
-<th>Company</th>
-<th>Qty</th>
-<th>Amount</th>
-<th>Status</th>
-<th>Client Approval</th>
-</tr>
-
-${rows}
-
-</table>
-
-</div>
-`;
-
+  let rows="";
+  orders.forEach(o=>{
+    rows+=`<tr>
+      <td>${o.id}</td><td>${o.company}</td><td>${o.qty}</td><td>${money(o.final)}</td>
+      <td>${badge(o.status)}</td><td>${o.clientApproval}</td>
+    </tr>`;
+  });
+  content.innerHTML=`<div class='card'><h1>Orders</h1><table><tr><th>Order</th><th>Company</th><th>Qty</th><th>Amount</th><th>Status</th><th>Client Approval</th></tr>${rows}</table></div>`;
 }
 
 function designPage(){
-
-let rows = "";
-
-orders.forEach(o=>{
-
-rows += `
-<tr>
-<td>${o.id}</td>
-<td>${o.company}</td>
-<td>${o.locations.map(x=>x.city).join(", ")}</td>
-<td>${o.locations.map(x=>x.designType).join(", ")}</td>
-<td>${o.clientApproval}</td>
-
-<td>
-<button class='btn2' onclick="approveClient('${o.id}')">Approve</button>
-<button class='btn2' onclick="rejectClient('${o.id}')">Reject</button>
-</td>
-
-</tr>
-`;
-
-});
-
-content.innerHTML = `
-<div class='card'>
-
-<h1>Design + Client Approval</h1>
-
-<table>
-
-<tr>
-<th>Order</th>
-<th>Company</th>
-<th>Locations</th>
-<th>Design</th>
-<th>Approval</th>
-<th>Action</th>
-</tr>
-
-${rows}
-
-</table>
-
-</div>
-`;
-
+  let rows="";
+  orders.forEach(o=>{
+    rows+=`<tr>
+      <td>${o.id}</td><td>${o.company}</td>
+      <td>${o.locations.map(x=>x.city).join(", ")}</td>
+      <td>${o.locations.map(x=>x.designType).join(", ")}</td>
+      <td>${badge(o.clientApproval)}</td>
+      <td><button class='btn2' onclick="approveClient('${o.id}')">Approve</button>
+      <button class='btn2' onclick="rejectClient('${o.id}')">Reject</button></td>
+    </tr>`;
+  });
+  content.innerHTML=`<div class='card'><h1>Design + Client Approval</h1><table><tr><th>Order</th><th>Company</th><th>Locations</th><th>Design</th><th>Approval</th><th>Action</th></tr>${rows}</table></div>`;
 }
 
 function approveClient(id){
-
-orders.forEach(o=>{
-
-if(o.id === id){
-o.clientApproval = "Approved";
-o.status = "Ready For Printing";
-}
-
-});
-
-saveDB();
-
-designPage();
-
+  let o=orders.find(x=>x.id===id);
+  o.clientApproval="Approved";
+  o.status="Ready For Printing";
+  if(!printJobs.find(p=>p.orderId===id)){
+    printJobs.unshift({id:"PRT-"+Date.now(),orderId:o.id,company:o.company,totalQty:o.qty,operator:"",machine:"",printed:0,ink:"",roll:"",status:"Pending"});
+  }
+  saveDB();
+  designPage();
 }
 
 function rejectClient(id){
-
-orders.forEach(o=>{
-
-if(o.id === id){
-o.clientApproval = "Revision Required";
-o.status = "Design Revision";
+  let o=orders.find(x=>x.id===id);
+  o.clientApproval="Revision Required";
+  o.status="Design Revision";
+  saveDB();
+  designPage();
 }
 
-});
+function printingPage(){
+  let rows="";
+  printJobs.forEach(p=>{
+    let pending=Math.max(0,Number(p.totalQty)-Number(p.printed||0));
+    let pct=p.totalQty?Math.round((Number(p.printed||0)/Number(p.totalQty))*100):0;
+    rows+=`<tr>
+      <td>${p.id}</td>
+      <td>${p.orderId}<br>${p.company}</td>
+      <td><input value="${p.operator}" onchange="setPrint('${p.id}','operator',this.value)" placeholder="Operator"></td>
+      <td><input value="${p.machine}" onchange="setPrint('${p.id}','machine',this.value)" placeholder="Machine"></td>
+      <td>${p.totalQty}</td>
+      <td><input type="number" value="${p.printed}" onchange="setPrinted('${p.id}',this.value)"></td>
+      <td>${pending}</td>
+      <td><input value="${p.ink}" onchange="setPrint('${p.id}','ink',this.value)" placeholder="Ink used"></td>
+      <td><input value="${p.roll}" onchange="setPrint('${p.id}','roll',this.value)" placeholder="Roll used"></td>
+      <td><div class='progress'><div class='bar' style='width:${pct}%'></div></div>${pct}%<br>${badge(p.status)}</td>
+      <td><button class='btnG' onclick="completePrint('${p.id}')">Complete</button></td>
+    </tr>`;
+  });
+  content.innerHTML=`<div class='card'><h1>Printing Production ERP</h1><p>Operator, machine, printed qty, pending qty, ink and roll tracking.</p><table><tr><th>Print ID</th><th>Order</th><th>Operator</th><th>Machine</th><th>Total</th><th>Printed</th><th>Pending</th><th>Ink</th><th>Roll</th><th>Status</th><th>Action</th></tr>${rows}</table></div>`;
+}
 
-saveDB();
+function setPrint(id,key,value){
+  let p=printJobs.find(x=>x.id===id);
+  p[key]=value;
+  if(p.status==="Pending")p.status="Running";
+  saveDB();
+}
 
-designPage();
+function setPrinted(id,value){
+  let p=printJobs.find(x=>x.id===id);
+  p.printed=Number(value||0);
+  p.status=p.printed>=p.totalQty?"Completed":"Running";
+  saveDB();
+  printingPage();
+}
 
+function completePrint(id){
+  let p=printJobs.find(x=>x.id===id);
+  p.printed=p.totalQty;
+  p.status="Completed";
+  let o=orders.find(x=>x.id===p.orderId);
+  if(o)o.status="Ready For Stitching";
+  saveDB();
+  printingPage();
+}
+
+function reportsPage(){
+  let rows="";
+  printJobs.forEach(p=>{
+    rows+=`<tr><td>${p.id}</td><td>${p.company}</td><td>${p.operator}</td><td>${p.machine}</td><td>${p.printed}/${p.totalQty}</td><td>${p.ink}</td><td>${p.roll}</td><td>${badge(p.status)}</td></tr>`;
+  });
+  content.innerHTML=`<div class='card'><h1>Printing Reports</h1><table><tr><th>Print ID</th><th>Company</th><th>Operator</th><th>Machine</th><th>Qty</th><th>Ink</th><th>Roll</th><th>Status</th></tr>${rows}</table></div>`;
 }
 
 dashboard();
-
 </script>
-
 </body>
 </html>
