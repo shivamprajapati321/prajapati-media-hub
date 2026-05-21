@@ -3,18 +3,19 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Phase 13 Admin ERP</title>
+<title>Phase 14 Cloud Backend ERP</title>
 <style>
 body{margin:0;background:#050506;color:#fff;font-family:Arial}
 .wrap{padding:20px}
 .card{background:#111;border:1px solid #333;border-radius:16px;padding:20px;margin-bottom:20px}
 .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-input,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
+input,textarea,select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:8px;width:100%}
 button{padding:10px 14px;background:#ff6b00;border:none;border-radius:8px;font-weight:700}
 table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
+th,td{padding:10px;border-bottom:1px solid #333;text-align:left;vertical-align:top}
 .badge{background:#22c55e20;color:#22c55e;padding:5px 10px;border-radius:999px;font-size:12px}
-.blue{background:#38bdf820;color:#38bdf8}
+.orange{background:#ff6b0020;color:#ff6b00}
+pre{background:#0b0b0b;border:1px solid #333;border-radius:12px;padding:14px;overflow:auto;color:#ddd}
 </style>
 </head>
 <body>
@@ -22,65 +23,208 @@ th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
 <div class="wrap">
 
 <div class="card">
-<h1>Phase 13 - Admin Enterprise Layer</h1>
-<p>Roles + Permissions + Activity Logs + Team Control</p>
+<h1>Phase 14 - Cloud Backend Ready ERP</h1>
+<p>Supabase / Firebase Ready Structure + Data Model + Sync Plan</p>
 </div>
 
 <div class="card">
 
-<h2>Create User</h2>
+<h2>Cloud Config</h2>
 
 <div class="grid">
 
 <div>
-<label>Name</label>
-<input id="name">
-</div>
-
-<div>
-<label>Department</label>
-<select id="department">
-<option>Admin</option>
-<option>Sales</option>
-<option>Design</option>
-<option>Printing</option>
-<option>Stitching</option>
-<option>Dispatch</option>
-<option>Execution</option>
-<option>Accounts</option>
+<label>Backend Provider</label>
+<select id="provider">
+<option>Supabase</option>
+<option>Firebase</option>
+<option>Custom API</option>
 </select>
 </div>
 
 <div>
-<label>Status</label>
-<select id="status">
-<option>Active</option>
-<option>Inactive</option>
-</select>
+<label>Project URL</label>
+<input id="projectUrl" placeholder="https://your-project.supabase.co">
+</div>
+
+<div>
+<label>Anon / Public Key</label>
+<input id="anonKey" placeholder="Paste public key">
 </div>
 
 </div>
 
 <br>
 
-<button onclick="saveUser()">Create User</button>
+<button onclick="saveConfig()">Save Cloud Config</button>
 
 </div>
 
 <div class="card">
 
-<h2>Users & Permissions</h2>
+<h2>ERP Tables Required</h2>
 
-<table id="tbl">
+<table>
 
 <tr>
-<th>Name</th>
-<th>Department</th>
+<th>Table</th>
+<th>Purpose</th>
 <th>Status</th>
-<th>Permissions</th>
+</tr>
+
+<tr>
+<td>users</td>
+<td>Role-based login: Admin, Sales, Design, Printing, Stitching, Dispatch, Execution, Accounts</td>
+<td><span class="badge orange">Required</span></td>
+</tr>
+
+<tr>
+<td>orders</td>
+<td>Main campaign/order details</td>
+<td><span class="badge orange">Required</span></td>
+</tr>
+
+<tr>
+<td>order_locations</td>
+<td>City-wise qty, design type, design file</td>
+<td><span class="badge orange">Required</span></td>
+</tr>
+
+<tr>
+<td>design_tasks</td>
+<td>Designer assignment, client approval, revision tracking</td>
+<td><span class="badge orange">Required</span></td>
+</tr>
+
+<tr>
+<td>printing_jobs</td>
+<td>Operator, machine, printed qty, ink, roll usage</td>
+<td><span class="badge orange">Required</span></td>
+</tr>
+
+<tr>
+<td>stitching_entries</td>
+<td>Worker qty, OT, cash/monthly payment</td>
+<td><span class="badge orange">Required</span></td>
+</tr>
+
+<tr>
+<td>dispatch_entries</td>
+<td>Bundle, vendor, LR, team/party dispatch</td>
+<td><span class="badge orange">Required</span></td>
+</tr>
+
+<tr>
+<td>execution_photos</td>
+<td>GPS photos, OCR vehicle number, execution proof</td>
+<td><span class="badge orange">Required</span></td>
+</tr>
+
+<tr>
+<td>accounts_entries</td>
+<td>Income, expense, outstanding, profit</td>
+<td><span class="badge orange">Required</span></td>
 </tr>
 
 </table>
+
+</div>
+
+<div class="card">
+
+<h2>Supabase SQL Starter</h2>
+
+<pre>
+create table users (
+  id uuid primary key default gen_random_uuid(),
+  name text,
+  phone text,
+  role text,
+  status text default 'active',
+  created_at timestamp default now()
+);
+
+create table orders (
+  id uuid primary key default gen_random_uuid(),
+  order_no text,
+  company text,
+  person text,
+  contact text,
+  media text,
+  total_qty numeric,
+  final_amount numeric,
+  status text,
+  created_at timestamp default now()
+);
+
+create table order_locations (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid references orders(id),
+  location text,
+  qty numeric,
+  design_type text,
+  design_file text
+);
+
+create table design_tasks (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid references orders(id),
+  designer text,
+  status text,
+  client_approval text
+);
+
+create table printing_jobs (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid references orders(id),
+  operator text,
+  machine text,
+  total_qty numeric,
+  printed_qty numeric,
+  ink_used text,
+  roll_used text,
+  status text
+);
+
+create table stitching_entries (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid references orders(id),
+  worker text,
+  qty numeric,
+  payment_type text,
+  amount numeric,
+  ot_amount numeric
+);
+
+create table dispatch_entries (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid references orders(id),
+  dispatch_type text,
+  team_or_party text,
+  bundles numeric,
+  pcs numeric,
+  vendor text,
+  lr_number text
+);
+
+create table execution_photos (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid references orders(id),
+  vehicle_no text,
+  gps text,
+  photo_url text,
+  ocr_status text
+);
+
+create table accounts_entries (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid references orders(id),
+  type text,
+  amount numeric,
+  mode text,
+  status text
+);
+</pre>
 
 </div>
 
@@ -90,74 +234,48 @@ th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
 
 <script>
 
-let users = JSON.parse(localStorage.getItem("adminUsers") || "[]");
+let config = JSON.parse(localStorage.getItem("cloudConfig") || "{}");
 
-function render(){
-
-let html = `
-<tr>
-<th>Name</th>
-<th>Department</th>
-<th>Status</th>
-<th>Permissions</th>
-</tr>
-`;
-
-let active = 0;
-
-users.forEach(u=>{
-
-if(u.status === "Active"){
-active++;
+function loadConfig(){
+document.getElementById("provider").value = config.provider || "Supabase";
+document.getElementById("projectUrl").value = config.projectUrl || "";
+document.getElementById("anonKey").value = config.anonKey || "";
+renderSummary();
 }
 
-html += `
-<tr>
-<td>${u.name}</td>
-<td>${u.department}</td>
-<td>
-<span class='badge ${u.status === "Inactive" ? "blue" : ""}'>
-${u.status}
-</span>
-</td>
-<td>
-Dashboard, Reports, Department Access
-</td>
-</tr>
-`;
+function saveConfig(){
 
-});
+config = {
+provider : document.getElementById("provider").value,
+projectUrl : document.getElementById("projectUrl").value,
+anonKey : document.getElementById("anonKey").value
+};
 
-document.getElementById("tbl").innerHTML = html;
+localStorage.setItem("cloudConfig", JSON.stringify(config));
+
+renderSummary();
+
+alert("Cloud Config Saved Locally");
+
+}
+
+function renderSummary(){
 
 document.getElementById("summary").innerHTML = `
-<h2>Admin Summary</h2>
+<h2>Cloud Summary</h2>
 
-<h3>Total Users : ${users.length}</h3>
-<h3>Active Users : ${active}</h3>
-<h3>Inactive Users : ${users.length-active}</h3>
-<h3>Enterprise Admin Layer Ready</h3>
+<h3>Provider : ${config.provider || "Not Set"}</h3>
+<h3>Project URL : ${config.projectUrl || "Not Set"}</h3>
+<h3>Public Key : ${config.anonKey ? "Saved" : "Not Set"}</h3>
+
+<p>
+Next step: create these tables in Supabase and connect live CRUD API.
+</p>
 `;
 
 }
 
-function saveUser(){
-
-users.unshift({
-name : document.getElementById("name").value,
-department : document.getElementById("department").value,
-status : document.getElementById("status").value
-});
-
-localStorage.setItem("adminUsers", JSON.stringify(users));
-
-render();
-
-alert("User Created");
-
-}
-
-render();
+loadConfig();
 
 </script>
 
